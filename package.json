@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@headlessui/react": "^1.7.17",
-    "@heroicons/react": "^2.0.18",
+    "@heroicons/react": "^2.2.0",
     "@react-google-maps/api": "^2.20.3",
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/stack": "^6.3.20",

@@ -10,7 +10,7 @@ import { Login } from './pages/Login';
 import { AuthProvider } from './contexts/AuthContext';
 import { Home } from './pages/Home';
 
-const libraries: Libraries = ['places'];
+const libraries: Libraries = ['places', 'geometry', 'drawing'];
 
 const App = () => {
   return (
