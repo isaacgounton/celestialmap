@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getDatabase } from 'firebase/database';
+import { getDatabase, ref, get, query, DatabaseReference } from 'firebase/database';
+import { Parish } from '../types/Parish';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -15,3 +16,21 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getDatabase(app);
+
+export const getParishesRef = (): DatabaseReference => ref(db, 'parishes');
+
+export const fetchAllParishes = async (): Promise<Parish[]> => {
+    const snapshot = await get(query(getParishesRef()));
+    
+    if (!snapshot.exists()) return [];
+    
+    const parishes: Parish[] = [];
+    snapshot.forEach((child) => {
+        parishes.push({
+            id: child.key!,
+            ...child.val()
+        });
+    });
+    
+    return parishes;
+};

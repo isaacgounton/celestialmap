@@ -1,8 +1,6 @@
-import * as React from "react";
-import { StyleSheet } from "react-nativescript";
+import React from "react";
 import { Parish } from "../../types/Parish";
 import { ParishListItem } from "./ParishListItem";
-import { Typography } from "../ui/Typography";
 
 interface ParishListProps {
     parishes: Parish[];
@@ -17,35 +15,33 @@ export function ParishList({
 }: ParishListProps) {
     if (loading) {
         return (
-            <stackLayout className="p-4">
-                <activityIndicator busy={true} />
-            </stackLayout>
+            <div className="p-4 flex justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
         );
     }
 
     if (parishes.length === 0) {
         return (
-            <stackLayout className="p-4">
-                <Typography variant="caption" className="text-center">
+            <div className="p-4">
+                <p className="text-center text-gray-500">
                     No parishes found
-                </Typography>
-            </stackLayout>
+                </p>
+            </div>
         );
     }
 
     return (
-        <scrollView>
-            <stackLayout className="p-4">
+        <div className="overflow-auto">
+            <div className="p-4 space-y-4">
                 {parishes.map((parish) => (
                     <ParishListItem
                         key={parish.id}
                         parish={parish}
-                        onTap={() => onParishSelect(parish)}
+                        onClick={() => onParishSelect(parish)}
                     />
                 ))}
-            </stackLayout>
-        </scrollView>
+            </div>
+        </div>
     );
 }
-
-const styles = StyleSheet.create({});

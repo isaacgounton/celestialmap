@@ -3,12 +3,13 @@ import { Routes, Route } from 'react-router-dom';
 import { LoadScriptNext } from '@react-google-maps/api';
 import type { Libraries } from '@react-google-maps/api';
 import { Layout } from './components/layout/Layout';
-import { ParishDetails } from './pages/ParishDetails';
-import { Marketplace } from './pages/Marketplace';
-import { Profile } from './pages/Profile';
-import { Login } from './pages/Login';
+import { ParishDetails } from './components/pages/ParishDetails';
+import { Marketplace } from './components/pages/Marketplace';
+import { Profile } from './components/pages/Profile';
+import { Login } from './components/pages/Login';
 import { AuthProvider } from './contexts/AuthContext';
-import { Home } from './pages/Home';
+import { Home } from './components/pages/Home';
+import { Parishes } from './components/pages/Parishes';
 
 const libraries: Libraries = ['places', 'geometry', 'drawing'];
 
@@ -32,6 +33,7 @@ const App = () => {
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/parishes" element={<Parishes />} />
           </Routes>
         </Layout>
       </AuthProvider>

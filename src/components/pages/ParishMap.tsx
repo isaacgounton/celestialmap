@@ -1,12 +1,12 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGeolocation } from '../hooks/useGeolocation';
-import { GoogleMap } from '../components/map/GoogleMap';
-import { LocationMarker } from '../components/map/LocationMarker';
-import { MapControls } from '../components/map/MapControls';
-import { MAPS_CONFIG } from '../config/constants';
-import { getNearbyParishes } from '../services/parishService';
-import { Parish } from '../types/Parish';
+import { useGeolocation } from '../../hooks/useGeolocation';
+import { GoogleMap } from '../map/GoogleMap';
+import { LocationMarker } from '../map/LocationMarker';
+import { MapControls } from '../map/MapControls';
+import { MAPS_CONFIG } from '../../config/constants';
+import { getNearbyParishes } from '../../services/parishService';
+import { Parish } from '../../types/Parish';
 
 export function ParishMap() {
   const navigate = useNavigate();

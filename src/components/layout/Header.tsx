@@ -10,7 +10,6 @@ export function Header() {
   const location = useLocation();
 
   const navLinks = [
-    { path: '/', label: 'Home' },
     { path: '/marketplace', label: 'Marketplace' },
     ...(isAuthenticated
       ? [

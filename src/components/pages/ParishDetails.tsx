@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { getParishById } from '../services/parishService';
-import { Parish } from '../types/Parish';
-import { Button } from '../components/ui/Button';
-import { formatPhoneNumber } from '../utils/formatters';
+import { getParishById } from '../../services/parishService';
+import { Parish } from '../../types/Parish';
+import { Button } from '../ui/Button';
+import { formatPhoneNumber } from '../../utils/formatters';
 
 export function ParishDetails() {
   const { id } = useParams<{ id: string }>();
@@ -28,21 +28,35 @@ export function ParishDetails() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Loading parish details...</div>
+      </div>
+    );
   }
 
   if (!parish) {
-    return <div>Parish not found</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg text-red-600">Parish not found</div>
+      </div>
+    );
   }
 
   return (
     <div className="max-w-4xl mx-auto px-4">
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <img
-          src={parish.photos[0]}
-          alt={parish.name}
-          className="w-full h-64 object-cover"
-        />
+        {parish.photos?.length > 0 ? (
+          <img
+            src={parish.photos[0]}
+            alt={parish.name}
+            className="w-full h-64 object-cover"
+          />
+        ) : (
+          <div className="w-full h-64 bg-gray-200 flex items-center justify-center">
+            <span className="text-gray-400">No image available</span>
+          </div>
+        )}
         
         <div className="p-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">{parish.name}</h1>

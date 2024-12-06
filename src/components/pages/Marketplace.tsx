@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { getProducts } from '../services/marketplaceService';
-import { Product } from '../types/Product';
-import { formatCurrency } from '../utils/formatters';
+import { getProducts } from '../../services/marketplaceService';
+import { Product } from '../../types/Product';
+import { formatCurrency } from '../../utils/formatters';
 
 export function Marketplace() {
   const [products, setProducts] = useState<Product[]>([]);

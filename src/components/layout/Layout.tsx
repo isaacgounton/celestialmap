@@ -1,7 +1,8 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { Header } from './Header';
-import { LeftNavigation } from './LeftNavigation'; // New component
+import { LeftNavigation } from './LeftNavigation';
+import { Footer } from './Footer';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -9,7 +10,7 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col min-h-screen">
       <Header />
       <div className="flex flex-1 overflow-hidden">
         <LeftNavigation />
@@ -17,6 +18,7 @@ export function Layout({ children }: LayoutProps) {
           {children}
         </main>
       </div>
+      <Footer />
     </div>
   );
 }

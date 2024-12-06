@@ -1,18 +1,20 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGeolocation } from '../hooks/useGeolocation';
-import { GoogleMap } from '../components/map/GoogleMap';
-import { LocationMarker } from '../components/map/LocationMarker';
-import { TopParishes } from '../components/parishes/TopParishes';
-import { MAPS_CONFIG } from '../config/constants';
-import { getNearbyParishes } from '../services/parishService';
-import { Parish } from '../types/Parish';
+import { useGeolocation } from '../../hooks/useGeolocation';
+import { GoogleMap } from '../map/GoogleMap';
+import { LocationMarker } from '../map/LocationMarker';
+import { TopParishes } from '../parishes/TopParishes';
+import { MAPS_CONFIG } from '../../config/constants';
+import { getNearbyParishes } from '../../services/parishService';
+import { Parish } from '../../types/Parish';
+import { fetchAllParishes } from '../../lib/firebase';
 
 export function Home() {
   const navigate = useNavigate();
-  const { location, loading, error, refreshLocation } = useGeolocation();
+  const { location, loading: geoLoading, error, refreshLocation } = useGeolocation();
   const [parishes, setParishes] = useState<Parish[]>([]);
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const handleMapLoad = useCallback((map: google.maps.Map) => {
     setMapInstance(map);
@@ -22,7 +24,21 @@ export function Home() {
     navigate(`/parish/${parishId}`);
   }, [navigate]);
 
-  // ...existing useCallback and useEffect code...
+  useEffect(() => {
+    const loadParishes = async () => {
+      setLoading(true);
+      try {
+        const fetchedParishes = await fetchAllParishes();
+        setParishes(fetchedParishes);
+      } catch (error) {
+        console.error('Error fetching parishes:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadParishes();
+  }, []);
 
   const center = location
     ? { lat: location.latitude, lng: location.longitude }
@@ -48,6 +64,7 @@ export function Home() {
               position={{ lat: parish.latitude, lng: parish.longitude }}
               title={parish.name}
               onClick={() => handleParishClick(parish.id)}
+              isParish
             />
           ))}
         </GoogleMap>

@@ -1,43 +1,34 @@
-import * as React from "react";
-import { StyleSheet } from "react-nativescript";
+import React from "react";
 import { Parish } from "../../types/Parish";
-import { Card } from "../ui/Card";
-import { Typography } from "../ui/Typography";
 
 interface ParishListItemProps {
     parish: Parish;
-    onTap: () => void;
+    onClick: () => void;
 }
 
-export function ParishListItem({ parish, onTap }: ParishListItemProps) {
+export function ParishListItem({ parish, onClick }: ParishListItemProps) {
     return (
-        <Card onTap={onTap} className="mb-2">
-            <gridLayout rows="auto, auto" columns="auto, *">
-                <image
-                    row={0}
-                    col={0}
-                    rowSpan={2}
-                    src={parish.photos[0]}
-                    className="w-16 h-16 rounded-lg mr-4"
-                />
-                <Typography
-                    row={0}
-                    col={1}
-                    variant="h3"
-                    className="mb-1"
-                >
-                    {parish.name}
-                </Typography>
-                <Typography
-                    row={1}
-                    col={1}
-                    variant="caption"
-                >
-                    {parish.address}
-                </Typography>
-            </gridLayout>
-        </Card>
+        <div 
+            onClick={onClick}
+            className="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer"
+        >
+            <div className="flex items-start space-x-4">
+                {parish.photos?.[0] && (
+                    <img
+                        src={parish.photos[0]}
+                        alt={parish.name}
+                        className="w-16 h-16 rounded-lg object-cover"
+                    />
+                )}
+                <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                        {parish.name}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                        {parish.address}
+                    </p>
+                </div>
+            </div>
+        </div>
     );
 }
-
-const styles = StyleSheet.create({});

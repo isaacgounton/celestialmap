@@ -1,9 +1,23 @@
-import React from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { Button } from '../components/ui/Button';
+import React, { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { Button } from '../ui/Button';
+import { ParishForm } from '../parish/ParishForm';
+import { createParish } from '../../services/parishService';
+import { Parish } from '../../types/Parish';
 
 export function Profile() {
   const { user, logout } = useAuth();
+  const [showParishForm, setShowParishForm] = useState(false);
+
+  const handleCreateParish = async (data: Omit<Parish, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      await createParish(data);
+      setShowParishForm(false);
+      // Optionally show success message or refresh data
+    } catch (error) {
+      console.error('Error creating parish:', error);
+    }
+  };
 
   if (!user) {
     return <div>Please log in to view your profile</div>;
@@ -26,7 +40,12 @@ export function Profile() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <h2 className="text-xl font-semibold mb-4">My Adopted Parishes</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">My Adopted Parishes</h2>
+              <Button variant="primary" onClick={() => setShowParishForm(true)}>
+                Add Parish
+              </Button>
+            </div>
             {(user.adoptedParishes ?? []).length === 0 ? (
               <p className="text-gray-600">You haven't adopted any parishes yet</p>
             ) : (
@@ -49,6 +68,13 @@ export function Profile() {
           </div>
         </div>
       </div>
+
+      {showParishForm && (
+        <ParishForm
+          onSubmit={handleCreateParish}
+          onCancel={() => setShowParishForm(false)}
+        />
+      )}
     </div>
   );
 }
