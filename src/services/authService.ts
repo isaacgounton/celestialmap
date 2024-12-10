@@ -7,7 +7,7 @@ import {
     GoogleAuthProvider,
     signInWithPopup
 } from 'firebase/auth';
-import { User } from "../types/User";
+import { User } from '../types/auth';
 
 export interface LoginCredentials {
     email: string;
@@ -62,7 +62,7 @@ function convertFirebaseUserToUser(userCredential: UserCredential): User {
     const firebaseUser = userCredential.user;
     return {
         id: firebaseUser.uid,
-        name: firebaseUser.displayName || 'User',
+        displayName: firebaseUser.displayName || 'User',
         email: firebaseUser.email!,
         avatar: firebaseUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(firebaseUser.displayName || 'User')}`,
         adoptedParishes: [],

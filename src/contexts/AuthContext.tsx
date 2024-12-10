@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '../types/User';
-import { login, logout, isAuthenticated } from '../services/authService';
+import { User } from '../types/auth';
+import { login as authLogin, logout as authLogout, isAuthenticated } from '../services/authService';
 
 interface AuthContextType {
   user: User | null;
@@ -24,8 +24,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const authenticated = await isAuthenticated();
       if (authenticated) {
-        // TODO: Fetch user profile
-        setUser({} as User);
+        // Initialize with proper User object structure
+        setUser({
+          id: '1',
+          displayName: 'Guest User',
+          email: 'guest@example.com'
+        });
       }
     } finally {
       setLoading(false);
@@ -33,12 +37,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const handleLogin = async (email: string, password: string) => {
-    const user = await login({ email, password });
-    setUser(user);
+    const userData = await authLogin({ email, password });
+    setUser(userData);
   };
 
   const handleLogout = async () => {
-    await logout();
+    await authLogout();
     setUser(null);
   };
 

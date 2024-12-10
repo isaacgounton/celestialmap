@@ -1,8 +1,13 @@
 import React from 'react';
 
-const Logo = () => {
+interface LogoProps {
+  className?: string;
+  collapsed?: boolean;
+}
+
+const Logo = ({ className, collapsed }: LogoProps) => {
   return (
-    <div className="flex items-center gap-2">
+    <div className={`flex items-center gap-2 ${className}`}>
       <svg
         width="32"
         height="32"
@@ -29,9 +34,11 @@ const Logo = () => {
         <circle cx="18" cy="6" r="1" fill="currentColor" />
         <circle cx="6" cy="18" r="1" fill="currentColor" />
       </svg>
-      <h1 className="text-2xl font-bold text-primary">
-        CelestialMap
-      </h1>
+      {!collapsed && (
+        <h1 className="text-2xl font-bold text-primary">
+          CelestialMap
+        </h1>
+      )}
     </div>
   );
 };

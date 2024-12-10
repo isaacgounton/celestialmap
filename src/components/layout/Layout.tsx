@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Header } from './Header';
 import { LeftNavigation } from './LeftNavigation';
@@ -9,16 +9,28 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState('US');
+
+  const handleToggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-      <div className="flex flex-1 overflow-hidden">
-        <LeftNavigation />
-        <main className="flex-1 overflow-auto">
+    <div className="flex h-screen">
+      <LeftNavigation isCollapsed={isCollapsed} />
+      <div className="flex flex-col flex-1">
+        <Header 
+          isCollapsed={isCollapsed} 
+          onToggleCollapse={handleToggleCollapse}
+          selectedCountry={selectedCountry}
+          onCountryChange={setSelectedCountry}
+        />
+        <main className="flex-1 overflow-auto p-6">
           {children}
         </main>
+        <Footer />
       </div>
-      <Footer />
     </div>
   );
 }

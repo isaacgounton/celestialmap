@@ -2,6 +2,7 @@ import React from 'react';
 import { FiHome, FiMapPin, FiBookOpen, FiShoppingBag, FiShoppingCart, FiTool } from 'react-icons/fi';
 import { GiKnifeFork, GiGasStove } from 'react-icons/gi';
 import { Link, useLocation } from 'react-router-dom';
+import Logo from '../ui/Logo';
 
 const navigationItems = [
   { icon: <FiHome size={20} />, label: 'Home', path: '/' },
@@ -14,13 +15,27 @@ const navigationItems = [
   { icon: <FiTool size={20} />, label: 'Services', path: '/services' },
 ];
 
-export function LeftNavigation() {
+interface LeftNavigationProps {
+  isCollapsed: boolean;
+}
+
+export function LeftNavigation({ isCollapsed }: LeftNavigationProps) {
   const location = useLocation();
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
+    <div className={`h-screen bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ${
+      isCollapsed ? 'w-20' : 'w-64'
+    }`}>
+      {/* Logo Section */}
+      <div className="p-4 border-b">
+        <Link to="/" className="flex items-center justify-center">
+          <Logo className={isCollapsed ? 'scale-75' : ''} collapsed={isCollapsed} />
+        </Link>
+      </div>
+
+      {/* Search and Navigation */}
       <div className="p-4">
-        <div className="relative">
+        <div className={`relative ${isCollapsed ? 'hidden' : 'block'}`}>
           <input
             type="text"
             placeholder="Search Parishes & Services"
@@ -38,12 +53,12 @@ export function LeftNavigation() {
             <li key={index}>
               <Link
                 to={item.path}
-                className={`w-full flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg text-left ${
-                  location.pathname === item.path ? 'bg-gray-100' : ''
+                className={`flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg ${
+                  isCollapsed ? 'justify-center' : 'space-x-3'
                 }`}
               >
                 <span className="text-gray-500">{item.icon}</span>
-                <span>{item.label}</span>
+                {!isCollapsed && <span>{item.label}</span>}
               </Link>
             </li>
           ))}
