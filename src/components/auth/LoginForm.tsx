@@ -2,6 +2,7 @@ import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { login, loginWithGoogle } from "../../services/authService";
 import { isValidEmail } from "../../utils/validation";
+import { useAuth } from '../../contexts/AuthContext';
 
 interface LoginFormProps {
     onClose?: () => void;
@@ -9,16 +10,20 @@ interface LoginFormProps {
 
 export function LoginForm({ onClose }: LoginFormProps) {
     const navigate = useNavigate();
+    const { setIsAuthenticated } = useAuth();
     const [email, setEmail] = React.useState("");
     const [password, setPassword] = React.useState("");
     const [error, setError] = React.useState("");
     const [loading, setLoading] = React.useState(false);
 
-    const handleSuccess = () => {
+    const handleSuccess = async () => {
+        setIsAuthenticated(true);
+        // Add small delay to allow auth state to update
+        await new Promise(resolve => setTimeout(resolve, 500));
         if (onClose) {
             onClose();
         }
-        navigate('/map');
+        navigate('/profile', { replace: true });
     };
 
     const handleRegisterClick = () => {

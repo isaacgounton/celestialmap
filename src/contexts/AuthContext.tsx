@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types/auth';
-import { login as authLogin, logout as authLogout, isAuthenticated } from '../services/authService';
+import { login as authLogin, logout as authLogout, onAuthStateChange } from '../services/authService';
 
 interface AuthContextType {
   user: User | null;
@@ -8,6 +8,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
+  setIsAuthenticated: (value: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -15,35 +16,29 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      const authenticated = await isAuthenticated();
-      if (authenticated) {
-        // Initialize with proper User object structure
-        setUser({
-          id: '1',
-          displayName: 'Guest User',
-          email: 'guest@example.com'
-        });
-      }
-    } finally {
+    const unsubscribe = onAuthStateChange((user) => {
+      setUser(user);
+      setIsAuthenticated(!!user);
       setLoading(false);
-    }
-  };
+    });
+
+    // Cleanup subscription
+    return () => unsubscribe();
+  }, []);
 
   const handleLogin = async (email: string, password: string) => {
     const userData = await authLogin({ email, password });
     setUser(userData);
+    setIsAuthenticated(true);
   };
 
   const handleLogout = async () => {
     await authLogout();
     setUser(null);
+    setIsAuthenticated(false);
   };
 
   return (
@@ -53,7 +48,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         login: handleLogin,
         logout: handleLogout,
-        isAuthenticated: !!user,
+        isAuthenticated,
+        setIsAuthenticated,
       }}
     >
       {children}

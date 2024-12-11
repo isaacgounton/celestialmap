@@ -5,7 +5,8 @@ import {
     signOut,
     UserCredential,
     GoogleAuthProvider,
-    signInWithPopup
+    signInWithPopup,
+    onAuthStateChanged
 } from 'firebase/auth';
 import { User } from '../types/auth';
 
@@ -56,6 +57,27 @@ export async function loginWithGoogle(): Promise<User> {
     const provider = new GoogleAuthProvider();
     const userCredential = await signInWithPopup(auth, provider);
     return convertFirebaseUserToUser(userCredential);
+}
+
+// Remove the checkAuthStatus function as we'll use Firebase's onAuthStateChanged
+
+export function onAuthStateChange(callback: (user: User | null) => void) {
+    return onAuthStateChanged(auth, (firebaseUser) => {
+        if (firebaseUser) {
+            const user: User = {
+                id: firebaseUser.uid,
+                displayName: firebaseUser.displayName || 'User',
+                email: firebaseUser.email!,
+                avatar: firebaseUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(firebaseUser.displayName || 'User')}`,
+                adoptedParishes: [],
+                createdAt: new Date(firebaseUser.metadata.creationTime!),
+                updatedAt: new Date(firebaseUser.metadata.lastSignInTime!)
+            };
+            callback(user);
+        } else {
+            callback(null);
+        }
+    });
 }
 
 function convertFirebaseUserToUser(userCredential: UserCredential): User {
