@@ -1,6 +1,12 @@
 import React from "react";
 import { Parish } from "../../types/Parish";
 
+function formatAddress(address: Parish['address']) {
+    if (!address) return '';
+    const { street, city, province, postalCode, country } = address;
+    return `${street}, ${city}, ${province} ${postalCode}, ${country}`.trim();
+}
+
 interface ParishListItemProps {
     parish: Parish;
     onClick: () => void;
@@ -25,7 +31,7 @@ export function ParishListItem({ parish, onClick }: ParishListItemProps) {
                         {parish.name}
                     </h3>
                     <p className="text-sm text-gray-600">
-                        {parish.address}
+                        {formatAddress(parish.address)}
                     </p>
                 </div>
             </div>

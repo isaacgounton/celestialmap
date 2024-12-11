@@ -10,11 +10,18 @@ interface ParishFormProps {
 export function ParishForm({ onSubmit, onCancel }: ParishFormProps) {
   const [formData, setFormData] = useState({
     name: '',
-    address: '',
+    address: {
+      street: '',
+      city: '',
+      province: '',
+      country: '',
+      postalCode: '',
+    },
     latitude: 0,
     longitude: 0,
     leaderName: '',
     phone: '',
+    email: '',
     website: '',
     openingHours: {
       Monday: '8:00 AM - 5:00 PM',
@@ -38,28 +45,98 @@ export function ParishForm({ onSubmit, onCancel }: ParishFormProps) {
       <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <h2 className="text-2xl font-bold mb-4">Add New Parish</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+            <div className="col-span-2">
               <label className="block mb-1">Parish Name</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={e => setFormData({...formData, name: e.target.value})}
                 className="w-full border rounded p-2"
-                placeholder="St. Mary's Catholic Church"
+                required
+              />
+            </div>
+
+            {/* Address Section */}
+            <div className="col-span-2">
+              <label className="block mb-1">Street Address</label>
+              <input
+                type="text"
+                value={formData.address.street}
+                onChange={e => setFormData({
+                  ...formData,
+                  address: {...formData.address, street: e.target.value}
+                })}
+                className="w-full border rounded p-2"
                 required
               />
             </div>
 
             <div>
-              <label className="block mb-1">Leader Name</label>
+              <label className="block mb-1">City</label>
+              <input
+                type="text"
+                value={formData.address.city}
+                onChange={e => setFormData({
+                  ...formData,
+                  address: {...formData.address, city: e.target.value}
+                })}
+                className="w-full border rounded p-2"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block mb-1">Province/State</label>
+              <input
+                type="text"
+                value={formData.address.province}
+                onChange={e => setFormData({
+                  ...formData,
+                  address: {...formData.address, province: e.target.value}
+                })}
+                className="w-full border rounded p-2"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block mb-1">Country</label>
+              <input
+                type="text"
+                value={formData.address.country}
+                onChange={e => setFormData({
+                  ...formData,
+                  address: {...formData.address, country: e.target.value}
+                })}
+                className="w-full border rounded p-2"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block mb-1">Postal Code</label>
+              <input
+                type="text"
+                value={formData.address.postalCode}
+                onChange={e => setFormData({
+                  ...formData,
+                  address: {...formData.address, postalCode: e.target.value}
+                })}
+                className="w-full border rounded p-2"
+                required
+              />
+            </div>
+
+            {/* Contact Information */}
+            <div className="col-span-2">
+              <label className="block mb-1">Parish Leader</label>
               <input
                 type="text"
                 value={formData.leaderName}
                 onChange={e => setFormData({...formData, leaderName: e.target.value})}
                 className="w-full border rounded p-2"
-                placeholder="Rev. Fr. John Doe"
-                required
               />
             </div>
 
@@ -70,34 +147,48 @@ export function ParishForm({ onSubmit, onCancel }: ParishFormProps) {
                 value={formData.phone}
                 onChange={e => setFormData({...formData, phone: e.target.value})}
                 className="w-full border rounded p-2"
-                placeholder="+234-123-456-7890"
-                required
-              />
-            </div>
-
-            <div className="col-span-2">
-              <label className="block mb-1">Address</label>
-              <input
-                type="text"
-                value={formData.address}
-                onChange={e => setFormData({...formData, address: e.target.value})}
-                className="w-full border rounded p-2"
-                placeholder="123 Church Street, Lagos"
-                required
               />
             </div>
 
             <div>
-              <label className="block mb-1">Latitude</label>
+              <label className="block mb-1">Email</label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={e => setFormData({...formData, email: e.target.value})}
+                className="w-full border rounded p-2"
+              />
+            </div>
+
+            <div className="col-span-2">
+              <label className="block mb-1">Website</label>
+              <input
+                type="url"
+                value={formData.website}
+                onChange={e => setFormData({...formData, website: e.target.value})}
+                className="w-full border rounded p-2"
+                placeholder="https://"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between">
+                <label className="block mb-1">Latitude</label>
+                <a
+                  href="https://locatorgabrielle.web.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:text-blue-800"
+                >
+                  Need coordinates? Click here
+                </a>
+              </div>
               <input
                 type="number"
                 step="0.000001"
-                min="-90"
-                max="90"
                 value={formData.latitude}
                 onChange={e => setFormData({...formData, latitude: parseFloat(e.target.value) || 0})}
                 className="w-full border rounded p-2"
-                placeholder="-90.000000 to 90.000000"
                 required
               />
             </div>
@@ -107,12 +198,9 @@ export function ParishForm({ onSubmit, onCancel }: ParishFormProps) {
               <input
                 type="number"
                 step="0.000001"
-                min="-180"
-                max="180"
                 value={formData.longitude}
                 onChange={e => setFormData({...formData, longitude: parseFloat(e.target.value) || 0})}
                 className="w-full border rounded p-2"
-                placeholder="-180.000000 to 180.000000"
                 required
               />
             </div>

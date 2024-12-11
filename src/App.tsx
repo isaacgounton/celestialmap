@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { LoadScriptNext } from '@react-google-maps/api';
 import type { Libraries } from '@react-google-maps/api';
 import { Layout } from './components/layout/Layout';
@@ -12,6 +12,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { Home } from './components/pages/Home';
 import { Parishes } from './components/pages/Parishes';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { Toaster } from 'react-hot-toast';
 
 const libraries: Libraries = ['places', 'geometry', 'drawing'];
 
@@ -28,24 +29,29 @@ const App = () => {
       }
     >
       <AuthProvider>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/parish/:id" element={<ParishDetails />} />
-            <Route path="/marketplace" element={<Marketplace />} />
-            <Route 
-              path="/profile" 
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="/login" element={<LoginForm />} />
-            <Route path="/register" element={<RegisterForm />} />
-            <Route path="/parishes" element={<Parishes />} />
-          </Routes>
-        </Layout>
+        <div className="min-h-screen bg-gray-50">
+          <BrowserRouter>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/parish/:id" element={<ParishDetails />} />
+                <Route path="/marketplace" element={<Marketplace />} />
+                <Route 
+                  path="/profile" 
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route path="/login" element={<LoginForm />} />
+                <Route path="/register" element={<RegisterForm />} />
+                <Route path="/parishes" element={<Parishes />} />
+              </Routes>
+            </Layout>
+          </BrowserRouter>
+          <Toaster position="top-right" />
+        </div>
       </AuthProvider>
     </LoadScriptNext>
   );

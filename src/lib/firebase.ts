@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getDatabase, ref, get, query, DatabaseReference } from 'firebase/database';
+import { getDatabase, ref, get, query, DatabaseReference, push, set, serverTimestamp } from 'firebase/database';
 import { Parish } from '../types/Parish';
 
 const firebaseConfig = {
@@ -33,4 +33,19 @@ export const fetchAllParishes = async (): Promise<Parish[]> => {
     });
     
     return parishes;
+};
+
+export const createParish = async (parishData: Omit<Parish, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const db = getDatabase();
+  const newParishRef = push(ref(db, 'parishes'));
+  
+  const parish = {
+    ...parishData,
+    id: newParishRef.key,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  };
+
+  await set(newParishRef, parish);
+  return parish;
 };

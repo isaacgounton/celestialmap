@@ -9,38 +9,70 @@ import {
   ActivityPanel, 
   NotificationPanel 
 } from '../profile/ProfilePanels';
+import { ParishForm } from '../parish/ParishForm';
+import { createParish } from '../../lib/firebase';
+import toast from 'react-hot-toast';
 
 export function Profile() {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('personal');
   const [isEditing, setIsEditing] = useState(false);
+  const [showParishForm, setShowParishForm] = useState(false);
 
   if (!user) {
     return <div>Please log in to view your profile</div>;
   }
 
+  const handleParishSubmit = async (parishData) => {
+    try {
+      const toastId = toast.loading('Adding parish...');
+      await createParish(parishData);
+      toast.success('Parish added successfully!', { id: toastId });
+      setShowParishForm(false);
+    } catch (error) {
+      console.error('Error creating parish:', error);
+      toast.error('Failed to add parish. Please try again.');
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Profile Header */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex items-center space-x-6">
-          <div className="relative">
-            <img
-              src={user.avatar}
-              alt={user.displayName}
-              className="w-24 h-24 rounded-full"
-            />
-            <button className="absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full text-white hover:bg-blue-700">
-              <FiEdit2 size={16} />
-            </button>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-6">
+            <div className="relative">
+              <img
+                src={user.avatar}
+                alt={user.displayName}
+                className="w-24 h-24 rounded-full"
+              />
+              <button className="absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full text-white hover:bg-blue-700">
+                <FiEdit2 size={16} />
+              </button>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">{user.displayName}</h1>
+              <p className="text-gray-600">{user.email}</p>
+              <p className="text-sm text-gray-500">Member since {user.createdAt.toLocaleDateString()}</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{user.displayName}</h1>
-            <p className="text-gray-600">{user.email}</p>
-            <p className="text-sm text-gray-500">Member since {user.createdAt.toLocaleDateString()}</p>
-          </div>
+          <Button
+            variant="primary"
+            onClick={() => setShowParishForm(true)}
+          >
+            Add my parish
+          </Button>
         </div>
       </div>
+
+      {/* Parish Form Modal */}
+      {showParishForm && (
+        <ParishForm
+          onSubmit={handleParishSubmit}
+          onCancel={() => setShowParishForm(false)}
+        />
+      )}
 
       {/* Main Content */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
