@@ -5,6 +5,11 @@ import { getParishById } from '../../services/parishService';
 import { Parish } from '../../types/Parish';
 import { Button } from '../ui/Button';
 import { formatPhoneNumber } from '../../utils/formatters';
+import { useAdmin } from '../../hooks/useAdmin';
+import { useAuth } from '../../hooks/useAuth';
+import { ref, update } from 'firebase/database';
+import { db } from '../../lib/firebase';
+import toast from 'react-hot-toast';
 
 function formatAddress(address: any) {
   if (!address) return '';
@@ -16,6 +21,8 @@ export function ParishDetails() {
   const { id } = useParams<{ id: string }>();
   const [parish, setParish] = useState<Parish | null>(null);
   const [loading, setLoading] = useState(true);
+  const { isAdmin } = useAdmin();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (id) {
@@ -31,6 +38,38 @@ export function ParishDetails() {
       console.error('Error loading parish:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleFeatured = async () => {
+    if (!parish || !user) return;
+    
+    try {
+      const parishRef = ref(db, `parishes/${id}`);
+      const updates = {
+        featured: !parish.featured,
+        featuredAt: parish.featured ? undefined : new Date().toISOString(),
+        featuredBy: parish.featured ? undefined : user.uid,
+        updatedAt: new Date().toISOString()
+      };
+      
+      await update(parishRef, updates);
+      
+      // Update local state with proper type handling
+      setParish(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          ...updates,
+          featuredAt: updates.featuredAt || undefined,
+          featuredBy: updates.featuredBy || undefined
+        };
+      });
+      
+      toast.success(parish.featured ? 'Parish removed from featured' : 'Parish added to featured');
+    } catch (error) {
+      console.error('Failed to update featured status:', error);
+      toast.error('Failed to update featured status');
     }
   };
 
@@ -159,6 +198,14 @@ export function ParishDetails() {
           </div>
         </div>
       </div>
+      {isAdmin && (
+        <button
+          onClick={toggleFeatured}
+          className="ml-4 px-4 py-2 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100"
+        >
+          {parish?.featured ? 'Remove from Featured' : 'Add to Featured'}
+        </button>
+      )}
     </div>
   );
 }

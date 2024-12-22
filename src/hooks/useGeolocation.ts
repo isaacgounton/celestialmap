@@ -1,42 +1,71 @@
-import { useState, useEffect } from 'react';
-import { getCurrentLocation } from '../utils/location';
+import { useState, useCallback } from 'react';
 
-interface UseGeolocationReturn {
-  location: {
-    latitude: number;
-    longitude: number;
-  } | null;
+interface Location {
+  latitude: number;
+  longitude: number;
+}
+
+interface GeolocationState {
+  location: Location | null;
   error: string | null;
   loading: boolean;
-  refreshLocation: () => Promise<void>;
 }
 
-export function useGeolocation(): UseGeolocationReturn {
-  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+export interface UseGeolocation extends GeolocationState {
+  refreshLocation: () => void;
+}
 
-  const refreshLocation = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const currentLocation = await getCurrentLocation();
-      setLocation(currentLocation);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get location');
-    } finally {
-      setLoading(false);
+export const useGeolocation = (): UseGeolocation => {
+  const [state, setState] = useState<GeolocationState>({
+    location: null,
+    error: null,
+    loading: true
+  });
+
+  const getCurrentPosition = useCallback(() => {
+    if (!navigator.geolocation) {
+      setState(prev => ({
+        ...prev,
+        error: 'Geolocation is not supported',
+        loading: false
+      }));
+      return;
     }
-  };
 
-  useEffect(() => {
-    refreshLocation();
+    setState(prev => ({ ...prev, loading: true }));
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setState({
+          location: {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          },
+          error: null,
+          loading: false
+        });
+      },
+      (error) => {
+        setState(prev => ({
+          ...prev,
+          error: error.message,
+          loading: false
+        }));
+      }
+    );
   }, []);
 
+  const refreshLocation = useCallback(() => {
+    getCurrentPosition();
+  }, [getCurrentPosition]);
+
+  // Initial location fetch
+  useState(() => {
+    getCurrentPosition();
+  });
+
   return {
-    location,
-    error,
-    loading,
+    ...state,
     refreshLocation
   };
-}
+};

@@ -24,6 +24,9 @@ export interface Parish {
   importSource?: 'google_places' | 'google_my_maps' | 'manual' | 'import';
   sourceId?: string;
   distance?: number; // Optional distance property for nearby searches
+  featured?: boolean;
+  featuredAt?: string;
+  featuredBy?: string;
 }
   
 // New interface for Google Maps place data

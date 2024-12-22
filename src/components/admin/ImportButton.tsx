@@ -11,6 +11,7 @@ interface ImportButtonProps {
   data?: {
     url?: string;
   };
+  disabled?: boolean;
 }
 
 interface ImportResponse {
@@ -18,7 +19,7 @@ interface ImportResponse {
   message: string;
 }
 
-export const ImportButton = ({ endpoint, label, countryCode = 'NG', source, data }: ImportButtonProps) => {
+export const ImportButton = ({ endpoint, label, countryCode = 'NG', source, data, disabled }: ImportButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleImport = async () => {
@@ -80,7 +81,7 @@ export const ImportButton = ({ endpoint, label, countryCode = 'NG', source, data
   return (
     <Button
       onClick={handleImport}
-      disabled={isLoading}
+      disabled={isLoading || disabled}
       variant={getButtonVariant(source)}
       className="min-w-[200px]"
     >

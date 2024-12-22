@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import { GoogleMap } from '../map/GoogleMap';
 import { LocationMarker } from '../map/LocationMarker';
-import { TopParishes } from '../parishes/TopParishes';
-import { MAPS_CONFIG } from '../../config/constants';
+import { FeaturedParishes } from '../parishes/FeaturedParishes';
 import { Parish } from '../../types/Parish';
 import { fetchAllParishes } from '../../lib/firebase';
 
@@ -83,7 +82,7 @@ export function Home() {
 
   const center = location
     ? { lat: location.latitude, lng: location.longitude }
-    : MAPS_CONFIG.DEFAULT_LOCATION;
+    : { lat: 6.4960307, lng: 2.5443571 }; // Porto-Novo, Benin
 
   return (
     <div className="flex flex-col h-full">
@@ -110,7 +109,7 @@ export function Home() {
           ))}
         </GoogleMap>
         <div className="absolute bottom-4 left-4">
-          <TopParishes />
+          <FeaturedParishes />
         </div>
         <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
           <div className="bg-white rounded-lg shadow-md p-2 space-y-2">

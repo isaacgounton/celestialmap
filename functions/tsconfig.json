@@ -10,9 +10,13 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
+    "baseUrl": "src",
     "noImplicitReturns": true,
-    "noUnusedLocals": true
+    "noUnusedLocals": true,
+    "moduleResolution": "node",
+    "paths": {
+      "@/*": ["*"]
+    }
   },
   "compileOnSave": true,
   "include": [

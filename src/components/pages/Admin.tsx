@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAdmin } from '../../hooks/useAdmin';
 import { ImportButton } from '../admin/ImportButton';
+import { CountrySelect } from '../admin/CountrySelect';
 import { ref, get } from 'firebase/database';
 import { db } from '../../lib/firebase';
 import { setAdminStatus } from '../../services/adminService';
+import { countries } from '../../data/countries';
 import toast from 'react-hot-toast';
 
 interface AdminUser {
@@ -15,6 +17,7 @@ interface AdminUser {
 export function Admin() {
   const { isAdmin, loading } = useAdmin();
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState('');
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -55,31 +58,22 @@ export function Admin() {
         <div className="space-y-4">
           <div>
             <h3 className="text-lg font-medium mb-2">Google Places Import</h3>
-            <div className="flex gap-4">
-              <ImportButton
-                endpoint="importFromGooglePlaces"
-                label="Import Benin Parishes"
-                countryCode="BJ"
-                source="places"
-              />
-              <ImportButton
-                endpoint="importFromGooglePlaces"
-                label="Import Nigeria Parishes"
-                countryCode="NG"
-                source="places"
-              />
-              <ImportButton
-                endpoint="importFromGooglePlaces"
-                label="Import Canada Parishes"
-                countryCode="CA"
-                source="places"
-              />
-              <ImportButton
-                endpoint="importFromGooglePlaces"
-                label="Import UK Parishes"
-                countryCode="GB"
-                source="places"
-              />
+            <div className="grid grid-cols-1 gap-4">
+              <div className="flex gap-4 items-end">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Select Country
+                  </label>
+                  <CountrySelect onSelect={setSelectedCountry} />
+                </div>
+                <ImportButton
+                  endpoint="importFromGooglePlaces"
+                  label={`Import ${selectedCountry ? `${countries.find((c) => c.code === selectedCountry)?.name} ` : ''}Parishes`}
+                  countryCode={selectedCountry}
+                  source="places"
+                  disabled={!selectedCountry}
+                />
+              </div>
             </div>
           </div>
 

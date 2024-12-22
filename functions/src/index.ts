@@ -2,55 +2,44 @@ import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import { importPlacesFromGoogle } from './importPlaces';
 import { importFromSpreadsheet } from './importSpreadsheet';
-import { 
-  fetchMapFeatures,
-  convertToParish
-} from './syncGoogleMaps';
+import { fetchMapFeatures, convertToParish } from './syncGoogleMaps';
+import { verifyAdmin } from './utils/adminUtils';
 
-admin.initializeApp();
+// Initialize Firebase Admin
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
+// Export all functions
+export * from './admin/adminFunctions';
+export * from './parishes/parishFunctions';
+export * from './sync/syncFunctions';
 
 // Add region configuration
 const regionalFunctions = functions.region('us-central1');
 
-// Convert importExistingPlaces to a regional function
 export const importExistingPlaces = regionalFunctions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
   }
 
-  const adminRef = admin.database().ref(`admins/${context.auth.uid}`);
-  const isAdmin = (await adminRef.get()).val() === true;
-
-  if (!isAdmin) {
-    throw new functions.https.HttpsError('permission-denied', 'Must be an admin');
-  }
-
-  const config = functions.config().google || {};
-  if (!config.maps_api_key || !config.my_maps_id) {
-    throw new functions.https.HttpsError(
-      'failed-precondition',
-      'Missing Google Maps configuration'
-    );
-  }
+  await verifyAdmin(context.auth.uid);
 
   try {
     console.log('Starting MyMaps import...');
-    const features = await fetchMapFeatures();  // Now using directly imported function
+    const features = await fetchMapFeatures();
     const parishesRef = admin.database().ref('parishes');
     let importCount = 0;
 
     for (const feature of features) {
-      const parish = convertToParish(feature);  // Now using directly imported function
+      const parish = convertToParish(feature);
       if (parish.sourceId) {
         await parishesRef.child(parish.sourceId).set(parish);
         importCount++;
       }
     }
 
-    return {
-      count: importCount,
-      message: `Successfully imported ${importCount} parishes`
-    };
+    return { count: importCount, message: `Successfully imported ${importCount} parishes` };
   } catch (error) {
     console.error('MyMaps import failed:', error);
     throw new functions.https.HttpsError(
