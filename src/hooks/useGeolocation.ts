@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { getCountryFromCoordinates } from '../utils/geocoding';
+import { useGeocoding } from './useGeocoding';
 
 interface Location {
   latitude: number;
@@ -18,6 +18,7 @@ export interface UseGeolocation extends GeolocationState {
 }
 
 export const useGeolocation = (): UseGeolocation => {
+  const { getCountryFromCoordinates } = useGeocoding();
   const [state, setState] = useState<GeolocationState>({
     location: null,
     error: null,
@@ -62,7 +63,7 @@ export const useGeolocation = (): UseGeolocation => {
         loading: false
       }));
     }
-  }, []);
+  }, [getCountryFromCoordinates]);
 
   const refreshLocation = useCallback(() => {
     getCurrentPosition();

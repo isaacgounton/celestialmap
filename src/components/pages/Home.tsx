@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGeolocation } from '../../hooks/useGeolocation';
+import { useGeocoding } from '../../hooks/useGeocoding';
 import { GoogleMap } from '../map/GoogleMap';
 import { LocationMarker } from '../map/LocationMarker';
 import { FeaturedParishes } from '../parishes/FeaturedParishes';
@@ -10,13 +11,23 @@ import { fetchAllParishes } from '../../lib/firebase';
 export function Home() {
   const navigate = useNavigate();
   const { location, loading: geoLoading, error: geoError, refreshLocation } = useGeolocation();
+  const { getCountryFromCoordinates } = useGeocoding();
   const [parishes, setParishes] = useState<Parish[]>([]);
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
   const [loading, setLoading] = useState(true);
 
   const handleMapLoad = useCallback((map: google.maps.Map) => {
     setMapInstance(map);
-  }, []);
+    // Add click listener directly to map instance
+    map.addListener('click', async (e: google.maps.MapMouseEvent) => {
+      const lat = e.latLng?.lat();
+      const lng = e.latLng?.lng();
+      if (lat && lng) {
+        const country = await getCountryFromCoordinates(lat, lng);
+        console.log('Clicked in country:', country);
+      }
+    });
+  }, [getCountryFromCoordinates]);
 
   const handleParishClick = useCallback((parishId: string) => {
     navigate(`/parish/${parishId}`);

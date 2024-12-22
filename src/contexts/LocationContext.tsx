@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useGeolocation } from '../hooks/useGeolocation';
+import { useGeocoding } from '../hooks/useGeocoding';
 
 interface LocationContextType {
   selectedCountry: string;
@@ -11,15 +12,23 @@ const LocationContext = createContext<LocationContextType | null>(null);
 
 export const LocationProvider = ({ children }: { children: React.ReactNode }) => {
   const { location } = useGeolocation();
+  const { getCountryFromCoordinates } = useGeocoding();
   const [selectedCountry, setSelectedCountry] = useState('BJ'); // Default to Benin
   const [userCountry, setUserCountry] = useState<string | null>(null);
 
   useEffect(() => {
-    if (location?.countryCode && !userCountry) {
-      setUserCountry(location.countryCode);
-      setSelectedCountry(location.countryCode);
-    }
-  }, [location?.countryCode]);
+    const updateUserCountry = async () => {
+      if (location?.latitude && location?.longitude && !userCountry) {
+        const country = await getCountryFromCoordinates(location.latitude, location.longitude);
+        if (country) {
+          setUserCountry(country);
+          setSelectedCountry(country);
+        }
+      }
+    };
+
+    updateUserCountry();
+  }, [location?.latitude, location?.longitude, getCountryFromCoordinates]);
 
   return (
     <LocationContext.Provider value={{ selectedCountry, setSelectedCountry, userCountry }}>
