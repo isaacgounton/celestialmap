@@ -50,25 +50,17 @@ export function LocationMarker({ position, title, onClick, isUserLocation, isPar
           scale: 1.5,
           anchor: new google.maps.Point(0, 10),
         },
-        // Add label for better visibility
-        label: title ? {
-          text: title,
-          color: "#4C1D95",
-          fontSize: "14px",
-          fontWeight: "bold",
-          className: "marker-label"
-        } : undefined,
         animation: google.maps.Animation.DROP,
         zIndex: 1
       };
     }
     return {};
-  }, [isUserLocation, isParish, title]);
+  }, [isUserLocation, isParish]);
 
   return (
     <Marker
       position={position}
-      title={title}
+      title={title} // Title will show on hover
       onClick={onClick}
       options={options}
     />
