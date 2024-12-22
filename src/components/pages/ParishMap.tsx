@@ -5,12 +5,14 @@ import { GoogleMap } from '../map/GoogleMap';
 import { LocationMarker } from '../map/LocationMarker';
 import { MapControls } from '../map/MapControls';
 import { MAPS_CONFIG } from '../../config/constants';
-import { getNearbyParishes } from '../../services/parishService';
+import { getParishesByCountry } from '../../services/parishService'; // Updated import
 import { Parish } from '../../types/Parish';
+import { useLocation } from '../../contexts/LocationContext';
 
 export function ParishMap() {
   const navigate = useNavigate();
   const { location, loading, error, refreshLocation } = useGeolocation();
+  const { selectedCountry } = useLocation();
   const [parishes, setParishes] = useState<Parish[]>([]);
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
 
@@ -21,13 +23,13 @@ export function ParishMap() {
   const handleSearch = useCallback(async () => {
     if (location) {
       try {
-        const nearbyParishes = await getNearbyParishes(location.latitude, location.longitude);
+        const nearbyParishes = await getParishesByCountry(selectedCountry); // Use getParishesByCountry instead
         setParishes(nearbyParishes);
       } catch (error) {
         console.error('Error fetching parishes:', error);
       }
     }
-  }, [location]);
+  }, [location, selectedCountry]);
 
   useEffect(() => {
     if (location) {

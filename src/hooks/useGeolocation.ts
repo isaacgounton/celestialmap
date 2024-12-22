@@ -1,8 +1,10 @@
 import { useState, useCallback } from 'react';
+import { getCountryFromCoordinates } from '../utils/geocoding';
 
 interface Location {
   latitude: number;
   longitude: number;
+  countryCode?: string; // Changed from string | null to string | undefined
 }
 
 interface GeolocationState {
@@ -22,7 +24,7 @@ export const useGeolocation = (): UseGeolocation => {
     loading: true
   });
 
-  const getCurrentPosition = useCallback(() => {
+  const getCurrentPosition = useCallback(async () => {
     if (!navigator.geolocation) {
       setState(prev => ({
         ...prev,
@@ -34,32 +36,39 @@ export const useGeolocation = (): UseGeolocation => {
 
     setState(prev => ({ ...prev, loading: true }));
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setState({
-          location: {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
-          },
-          error: null,
-          loading: false
-        });
-      },
-      (error) => {
-        setState(prev => ({
-          ...prev,
-          error: error.message,
-          loading: false
-        }));
-      }
-    );
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+      });
+
+      const countryCode = await getCountryFromCoordinates(
+        position.coords.latitude,
+        position.coords.longitude
+      );
+
+      setState({
+        location: {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          countryCode: countryCode || undefined // Convert null to undefined
+        },
+        error: null,
+        loading: false
+      });
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Location error',
+        loading: false
+      }));
+    }
   }, []);
 
   const refreshLocation = useCallback(() => {
     getCurrentPosition();
   }, [getCurrentPosition]);
 
-  // Initial location fetch
+  // Initial location fetch using useState callback
   useState(() => {
     getCurrentPosition();
   });

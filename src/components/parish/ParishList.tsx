@@ -1,5 +1,6 @@
 import { Parish } from "../../types/Parish";
 import { ParishListItem } from "./ParishListItem";
+import { useLocation } from '../../contexts/LocationContext';
 
 interface ParishListProps {
     parishes: Parish[];
@@ -12,6 +13,12 @@ export function ParishList({
     onParishSelect, 
     loading = false 
 }: ParishListProps) {
+    const { selectedCountry } = useLocation();
+
+    const filteredParishes = parishes.filter(
+        parish => parish.address.country === selectedCountry
+    );
+
     if (loading) {
         return (
             <div className="p-4 flex justify-center">
@@ -20,11 +27,11 @@ export function ParishList({
         );
     }
 
-    if (parishes.length === 0) {
+    if (filteredParishes.length === 0) {
         return (
             <div className="p-4">
                 <p className="text-center text-gray-500">
-                    No parishes found
+                    No parishes found in {selectedCountry}
                 </p>
             </div>
         );
@@ -33,7 +40,7 @@ export function ParishList({
     return (
         <div className="overflow-auto">
             <div className="p-4 space-y-4">
-                {parishes.map((parish) => (
+                {filteredParishes.map((parish) => (
                     <ParishListItem
                         key={parish.id}
                         parish={parish}

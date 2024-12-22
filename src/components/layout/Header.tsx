@@ -1,23 +1,23 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation as useRouterLocation } from 'react-router-dom';
 import { FiMenu, FiX, FiUser, FiChevronDown, FiSidebar } from 'react-icons/fi';
 import { useAuth } from '../../hooks/useAuth';  // Updated import path
 import { countries } from '../../data/countries';
 import { useAdmin } from '../../hooks/useAdmin';  // Add this import
+import { useLocation } from '../../contexts/LocationContext';
 
 interface HeaderProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
-  selectedCountry: string;
-  onCountryChange: (country: string) => void;
 }
 
-export function Header({ isCollapsed, onToggleCollapse, selectedCountry, onCountryChange }: HeaderProps) {
+export function Header({ isCollapsed, onToggleCollapse }: HeaderProps) {
   const { user, isAuthenticated, logout } = useAuth();
   const { isAdmin } = useAdmin();  // Add this hook
+  const { selectedCountry, setSelectedCountry } = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const location = useLocation();
+  const location = useRouterLocation();
 
   const navLinks = [
     { path: '/marketplace', label: 'Marketplace' },
@@ -41,7 +41,7 @@ export function Header({ isCollapsed, onToggleCollapse, selectedCountry, onCount
             </button>
             <select
               value={selectedCountry}
-              onChange={(e) => onCountryChange(e.target.value)}
+              onChange={(e) => setSelectedCountry(e.target.value)}
               className="form-select border border-gray-300 rounded-lg py-1 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               aria-label="Select country"
               title="Select country"

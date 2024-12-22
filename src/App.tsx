@@ -13,54 +13,57 @@ import { Parishes } from './components/pages/Parishes';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Toaster } from 'react-hot-toast';
 import { Admin } from './components/pages/Admin';
+import { LocationProvider } from './contexts/LocationContext';
 
 const libraries: Libraries = ['places', 'geometry', 'drawing'];
 
 const App = () => {
   return (
     <AuthProvider>
-      <LoadScriptNext
-        googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
-        libraries={libraries}
-        version="weekly"
-        loadingElement={
-          <div className="w-full h-screen flex items-center justify-center">
-            Loading Maps...
+      <LocationProvider>
+        <LoadScriptNext
+          googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+          libraries={libraries}
+          version="weekly"
+          loadingElement={
+            <div className="w-full h-screen flex items-center justify-center">
+              Loading Maps...
+            </div>
+          }
+        >
+          <div className="min-h-screen bg-gray-50">
+            <BrowserRouter>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/parish/:id" element={<ParishDetails />} />
+                  <Route path="/marketplace" element={<Marketplace />} />
+                  <Route 
+                    path="/profile" 
+                    element={
+                      <ProtectedRoute>
+                        <Profile />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route path="/login" element={<LoginForm />} />
+                  <Route path="/register" element={<RegisterForm />} />
+                  <Route path="/parishes" element={<Parishes />} />
+                  <Route 
+                    path="/admin" 
+                    element={
+                      <ProtectedRoute>
+                        <Admin />
+                      </ProtectedRoute>
+                    } 
+                  />
+                </Routes>
+              </Layout>
+            </BrowserRouter>
+            <Toaster position="top-right" />
           </div>
-        }
-      >
-        <div className="min-h-screen bg-gray-50">
-          <BrowserRouter>
-            <Layout>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/parish/:id" element={<ParishDetails />} />
-                <Route path="/marketplace" element={<Marketplace />} />
-                <Route 
-                  path="/profile" 
-                  element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route path="/login" element={<LoginForm />} />
-                <Route path="/register" element={<RegisterForm />} />
-                <Route path="/parishes" element={<Parishes />} />
-                <Route 
-                  path="/admin" 
-                  element={
-                    <ProtectedRoute>
-                      <Admin />
-                    </ProtectedRoute>
-                  } 
-                />
-              </Routes>
-            </Layout>
-          </BrowserRouter>
-          <Toaster position="top-right" />
-        </div>
-      </LoadScriptNext>
+        </LoadScriptNext>
+      </LocationProvider>
     </AuthProvider>
   );
 }

@@ -1,4 +1,4 @@
-import { ref, get, push, set } from 'firebase/database';
+import { ref, get, push, set, query, orderByChild, equalTo } from 'firebase/database';
 import { db } from '../lib/firebase';
 import { Parish, ParishWithDistance } from "../types/Parish";
 
@@ -8,12 +8,13 @@ export async function getParishById(id: string): Promise<Parish | null> {
     return snapshot.exists() ? snapshot.val() : null;
 }
 
+// Fix arrow function syntax for calculateDistance
 const calculateDistance = (
   lat1: number,
   lon1: number,
   lat2: number,
   lon2: number
-): number => {
+) => {
   const R = 6371; // Earth's radius in km
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
@@ -25,35 +26,43 @@ const calculateDistance = (
   return R * c;
 };
 
-export async function getNearbyParishes(
+export const getNearbyParishes = async (
   latitude: number,
   longitude: number,
-  radius: number = 10 // Default radius in kilometers
-): Promise<ParishWithDistance[]> {
+  countryCode: string,
+  radius = 10 // Default radius in kilometers
+): Promise<ParishWithDistance[]> => {
   const parishesRef = ref(db, 'parishes');
-  const snapshot = await get(parishesRef);
+  const countryQuery = query(
+    parishesRef,
+    orderByChild('address/country'),
+    equalTo(countryCode)
+  );
+
+  const snapshot = await get(countryQuery);
+  if (!snapshot.exists()) return [];
+
   const parishes: ParishWithDistance[] = [];
-  
-  if (snapshot.exists()) {
-    snapshot.forEach((child) => {
-      const parish = child.val() as Parish;
-      const distance = calculateDistance(
-        latitude,
-        longitude,
-        parish.latitude,
-        parish.longitude
-      );
-      if (distance <= radius) {
-        parishes.push({
-          ...parish,
-          distance: Math.round(distance * 10) / 10 // Round to 1 decimal place
-        });
-      }
-    });
-  }
-  
+
+  Object.entries(snapshot.val()).forEach(([id, data]: [string, any]) => {
+    const parish = { id, ...data } as Parish;
+    const distance = calculateDistance(
+      latitude,
+      longitude,
+      parish.latitude,
+      parish.longitude
+    );
+    
+    if (distance <= radius) {
+      parishes.push({
+        ...parish,
+        distance: Math.round(distance * 10) / 10 // Round to 1 decimal place
+      });
+    }
+  });
+
   return parishes.sort((a, b) => a.distance - b.distance);
-}
+};
 
 export async function createParish(
   data: Omit<Parish, 'id' | 'createdAt' | 'updatedAt'>
@@ -71,3 +80,20 @@ export async function createParish(
   await set(parishRef, parish);
   return parish;
 }
+
+export const getParishesByCountry = async (countryCode: string): Promise<Parish[]> => {
+  const parishesRef = ref(db, 'parishes');
+  const countryQuery = query(
+    parishesRef,
+    orderByChild('address/country'),
+    equalTo(countryCode)
+  );
+
+  const snapshot = await get(countryQuery);
+  if (!snapshot.exists()) return [];
+
+  return Object.entries(snapshot.val()).map(([id, data]: [string, any]) => ({
+    id,
+    ...data
+  }));
+};
