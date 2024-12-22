@@ -1,6 +1,6 @@
 import { ref, get, push, set } from 'firebase/database';
 import { db } from '../lib/firebase';
-import { Parish } from "../types/Parish";
+import { Parish, ParishWithDistance } from "../types/Parish";
 
 export async function getParishById(id: string): Promise<Parish | null> {
     const parishRef = ref(db, `parishes/${id}`);
@@ -29,10 +29,10 @@ export async function getNearbyParishes(
   latitude: number,
   longitude: number,
   radius: number = 10 // Default radius in kilometers
-): Promise<Parish[]> {
+): Promise<ParishWithDistance[]> {
   const parishesRef = ref(db, 'parishes');
   const snapshot = await get(parishesRef);
-  const parishes: Parish[] = [];
+  const parishes: ParishWithDistance[] = [];
   
   if (snapshot.exists()) {
     snapshot.forEach((child) => {
@@ -52,14 +52,14 @@ export async function getNearbyParishes(
     });
   }
   
-  return parishes.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+  return parishes.sort((a, b) => a.distance - b.distance);
 }
 
 export async function createParish(
   data: Omit<Parish, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<Parish> {
   const parishRef = push(ref(db, 'parishes'));
-  const now = new Date();
+  const now = new Date().toISOString();
   
   const parish: Parish = {
     id: parishRef.key!,

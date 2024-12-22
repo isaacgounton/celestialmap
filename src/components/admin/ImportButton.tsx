@@ -1,29 +1,32 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '../ui/Button';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import toast from 'react-hot-toast';
 
 interface ImportButtonProps {
   endpoint: string;
   label: string;
 }
 
-export const ImportButton: React.FC<ImportButtonProps> = ({ endpoint, label }) => {
+interface ImportResponse {
+  count: number;
+  message: string;
+}
+
+export const ImportButton = ({ endpoint, label }: ImportButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleImport = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      const data = await response.json();
-      console.log('Import result:', data);
-      alert(`Successfully imported ${data.imported} places`);
+      const functions = getFunctions();
+      const importFn = httpsCallable<unknown, ImportResponse>(functions, endpoint);
+      const result = await importFn();
+      
+      toast.success(`Successfully imported ${result.data.count} items`);
     } catch (error) {
       console.error('Import failed:', error);
-      alert('Import failed. Check console for details.');
+      toast.error('Import failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -33,7 +36,7 @@ export const ImportButton: React.FC<ImportButtonProps> = ({ endpoint, label }) =
     <Button
       onClick={handleImport}
       disabled={isLoading}
-      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      variant="primary"
     >
       {isLoading ? 'Importing...' : label}
     </Button>

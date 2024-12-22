@@ -15,19 +15,17 @@ export interface Parish {
   email: string;
   website?: string;
   description?: string;
+  photos: string[];
   openingHours: {
     [key: string]: string;
   };
-  photos: string[];
-  createdAt: Date;
-  updatedAt: Date;
-  // Add new sync-related fields
-  importSource?: 'google_my_maps' | 'manual' | 'import';
+  createdAt: string;
+  updatedAt: string;
+  importSource?: 'google_places' | 'google_my_maps' | 'manual' | 'import';
   sourceId?: string;
-  lastSynced?: string;
-  distance?: number; // Distance in kilometers from search location
+  distance?: number; // Optional distance property for nearby searches
 }
-
+  
 // New interface for Google Maps place data
 export interface GoogleMapsPlace {
   placeId: string;
@@ -55,4 +53,8 @@ export interface ParishImportData {
   latitude: number;
   longitude: number;
   lastSynced: string;
+}
+
+export interface ParishWithDistance extends Parish {
+  distance: number;
 }

@@ -54,11 +54,11 @@ export function Admin() {
         <h2 className="text-xl font-semibold mb-4">Data Management</h2>
         <div className="flex gap-4">
           <ImportButton
-            endpoint="/api/import/google-places"
+            endpoint="importFromGooglePlaces"
             label="Import from Google Places"
           />
           <ImportButton
-            endpoint="/api/import/spreadsheet"
+            endpoint="importFromSpreadsheet"
             label="Import from Spreadsheet"
           />
         </div>
