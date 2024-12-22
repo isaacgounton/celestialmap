@@ -1,15 +1,17 @@
-import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-
-const menuItems = [
-  { path: '/', label: 'Home', icon: '🏠' },
-  { path: '/map', label: 'Parish Map', icon: '🗺️' },
-  { path: '/marketplace', label: 'Marketplace', icon: '🛍️' },
-  { path: '/profile', label: 'Profile', icon: '👤' },
-];
+import { useAdmin } from '../../hooks/useAdmin';
 
 export function Sidebar() {
   const location = useLocation();
+  const { isAdmin } = useAdmin();
+
+  const menuItems = [
+    { path: '/', label: 'Home', icon: '🏠' },
+    { path: '/map', label: 'Parish Map', icon: '🗺️' },
+    { path: '/marketplace', label: 'Marketplace', icon: '🛍️' },
+    { path: '/profile', label: 'Profile', icon: '👤' },
+    ...(isAdmin ? [{ path: '/admin', label: 'Admin', icon: '⚙️' }] : []),
+  ];
 
   const isActive = (path: string) => {
     if (path === '/') {

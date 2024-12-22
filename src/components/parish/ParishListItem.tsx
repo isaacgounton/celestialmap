@@ -1,4 +1,3 @@
-import React from "react";
 import { Parish } from "../../types/Parish";
 
 function formatAddress(address: Parish['address']) {

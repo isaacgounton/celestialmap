@@ -1,6 +1,4 @@
-
 import React from 'react';
-import { IconType } from 'react-icons';
 
 interface TabPanelProps {
   id: string;
@@ -41,6 +39,7 @@ export function Tabs({ activeTab, onChange, children }: TabsProps) {
   );
 }
 
-export function TabPanel({ id, label, icon }: TabPanelProps) {
+// Since TabPanel is just for configuration, we don't need to destructure props
+export function TabPanel(_props: TabPanelProps) {
   return null; // This is just a configuration component
 }

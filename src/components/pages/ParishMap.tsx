@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import { GoogleMap } from '../map/GoogleMap';
@@ -39,6 +39,18 @@ export function ParishMap() {
     navigate(`/parish/${parishId}`);
   }, [navigate]);
 
+  const handleZoomIn = useCallback(() => {
+    if (mapInstance) {
+      mapInstance.setZoom((mapInstance.getZoom() || 14) + 1);
+    }
+  }, [mapInstance]);
+
+  const handleZoomOut = useCallback(() => {
+    if (mapInstance) {
+      mapInstance.setZoom((mapInstance.getZoom() || 14) - 1);
+    }
+  }, [mapInstance]);
+
   if (error) {
     return (
       <div className="p-4 text-center">
@@ -76,6 +88,8 @@ export function ParishMap() {
       <MapControls
         onRefresh={refreshLocation}
         onSearch={handleSearch}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
         loading={loading}
       />
     </div>

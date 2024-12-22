@@ -18,8 +18,9 @@ export function Button({
   const variantStyles = {
     primary: 'bg-primary text-white hover:bg-blue-600',
     secondary: 'bg-secondary text-white hover:bg-gray-700',
-    outline: 'border-2 border-primary text-primary hover:bg-blue-50'
-  };
+    outline: 'border-2 border-primary text-primary hover:bg-blue-50',
+    danger: 'bg-red-600 text-white hover:bg-red-700'
+  } as const;
 
   return (
     <button

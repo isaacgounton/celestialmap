@@ -49,3 +49,44 @@ export const createParish = async (parishData: Omit<Parish, 'id' | 'createdAt' |
   await set(newParishRef, parish);
   return parish;
 };
+
+export const addPersonalMapPlace = async (placeData: {
+  name: string;
+  address: string;
+  location: { lat: number; lng: number };
+  placeId: string;
+}) => {
+  const now = new Date();
+  const parish: Partial<Parish> = {
+    id: `personal_${placeData.placeId}`,
+    name: placeData.name,
+    address: parseAddressString(placeData.address),
+    latitude: placeData.location.lat,
+    longitude: placeData.location.lng,
+    createdAt: now,
+    updatedAt: now,
+    importSource: 'manual',
+    sourceId: placeData.placeId,
+    lastSynced: now.toISOString(),
+    leaderName: '',
+    phone: '',
+    email: '',
+    openingHours: {},
+    photos: []
+  };
+
+  const parishRef = ref(db, `parishes/${parish.id}`);
+  await set(parishRef, parish);
+  return parish;
+};
+
+const parseAddressString = (fullAddress: string) => {
+  const parts = fullAddress.split(',').map(part => part.trim());
+  return {
+    street: parts[0] || '',
+    city: parts[1] || '',
+    province: parts[2] || '',
+    country: parts[parts.length - 1] || '',
+    postalCode: '',
+  };
+};

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types/auth';
 import { login as authLogin, logout as authLogout, onAuthStateChange } from '../services/authService';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 interface AuthContextType {
   user: User | null;
@@ -9,6 +10,8 @@ interface AuthContextType {
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   setIsAuthenticated: (value: boolean) => void;
+  isAdmin: boolean;
+  checkAdminStatus: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,15 +20,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const checkAdminStatus = async () => {
+    if (!user) return false;
+
+    try {
+      const functions = getFunctions();
+      const checkAdmin = httpsCallable(functions, 'checkAdminStatus');
+      const result = await checkAdmin();
+      const adminStatus = (result.data as { isAdmin: boolean }).isAdmin;
+      setIsAdmin(adminStatus);
+      return adminStatus;
+    } catch (error) {
+      console.error('Failed to check admin status:', error);
+      setIsAdmin(false);
+      return false;
+    }
+  };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChange((user) => {
+    const unsubscribe = onAuthStateChange(async (user) => {
       setUser(user);
       setIsAuthenticated(!!user);
+      if (user) {
+        await checkAdminStatus();
+      } else {
+        setIsAdmin(false);
+      }
       setLoading(false);
     });
 
-    // Cleanup subscription
     return () => unsubscribe();
   }, []);
 
@@ -50,6 +75,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout: handleLogout,
         isAuthenticated,
         setIsAuthenticated,
+        isAdmin,
+        checkAdminStatus
       }}
     >
       {children}

@@ -23,6 +23,7 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({ onCategorySelect }) =>
         {categories.map((category, index) => (
           <button
             key={index}
+            onClick={() => onCategorySelect?.(category.label)}
             className="flex flex-col items-center min-w-[80px] px-4 py-2 hover:bg-gray-100 rounded-lg"
           >
             {category.icon}

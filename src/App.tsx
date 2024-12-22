@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { LoadScriptNext } from '@react-google-maps/api';
 import type { Libraries } from '@react-google-maps/api';
@@ -13,6 +12,7 @@ import { Home } from './components/pages/Home';
 import { Parishes } from './components/pages/Parishes';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Toaster } from 'react-hot-toast';
+import { Admin } from './components/pages/Admin';
 
 const libraries: Libraries = ['places', 'geometry', 'drawing'];
 
@@ -47,6 +47,14 @@ const App = () => {
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/register" element={<RegisterForm />} />
                 <Route path="/parishes" element={<Parishes />} />
+                <Route 
+                  path="/admin" 
+                  element={
+                    <ProtectedRoute>
+                      <Admin />
+                    </ProtectedRoute>
+                  } 
+                />
               </Routes>
             </Layout>
           </BrowserRouter>

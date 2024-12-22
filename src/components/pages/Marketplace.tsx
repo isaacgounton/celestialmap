@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { getProducts } from '../../services/marketplaceService';
 import { Product } from '../../types/Product';
 import { formatCurrency } from '../../utils/formatters';

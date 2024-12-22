@@ -1,9 +1,3 @@
-
-import React from 'react';
-import { FiMapPin } from 'react-icons/fi';
-import { Button } from '../ui/Button';
-import { Parish } from '../../types/Parish';
-
 interface AdoptedParishesPanelProps {
   parishes: string[];
 }
@@ -33,20 +27,25 @@ export function LocationPanel() {
       <h2 className="text-xl font-semibold mb-6">Location Preferences</h2>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="default-location" className="block text-sm font-medium text-gray-700 mb-2">
             Default Search Location
           </label>
           <input
+            id="default-location"
             type="text"
             placeholder="Enter your location"
             className="w-full px-4 py-2 border rounded-lg"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="search-radius" className="block text-sm font-medium text-gray-700 mb-2">
             Search Radius
           </label>
-          <select className="w-full px-4 py-2 border rounded-lg">
+          <select 
+            id="search-radius"
+            className="w-full px-4 py-2 border rounded-lg"
+            aria-label="Select search radius"
+          >
             <option value="5">5 miles</option>
             <option value="10">10 miles</option>
             <option value="25">25 miles</option>
@@ -78,14 +77,19 @@ export function NotificationPanel() {
       <h2 className="text-xl font-semibold mb-6">Notification Settings</h2>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <div>
+          <label htmlFor="email-notifications" className="flex-grow">
             <p className="font-medium">Email Notifications</p>
             <p className="text-sm text-gray-500">Receive updates about your parishes</p>
-          </div>
-          <label className="switch">
-            <input type="checkbox" defaultChecked />
-            <span className="slider round"></span>
           </label>
+          <div className="switch">
+            <input 
+              id="email-notifications"
+              type="checkbox" 
+              defaultChecked
+              aria-label="Toggle email notifications"
+            />
+            <span className="slider round"></span>
+          </div>
         </div>
       </div>
     </div>

@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FiMenu, FiX, FiUser, FiChevronDown, FiSidebar } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
-import { User } from '../../types/auth';
 import { countries } from '../../data/countries';
 
 interface HeaderProps {
@@ -33,6 +32,8 @@ export function Header({ isCollapsed, onToggleCollapse, selectedCountry, onCount
             <button 
               className="p-2 hover:bg-gray-100 rounded-lg"
               onClick={onToggleCollapse}
+              aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} sidebar`}
+              title={`${isCollapsed ? 'Expand' : 'Collapse'} sidebar`}
             >
               <FiSidebar size={20} className={isCollapsed ? 'rotate-180' : ''} />
             </button>
@@ -40,12 +41,14 @@ export function Header({ isCollapsed, onToggleCollapse, selectedCountry, onCount
               value={selectedCountry}
               onChange={(e) => onCountryChange(e.target.value)}
               className="form-select border border-gray-300 rounded-lg py-1 px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              aria-label="Select country"
+              title="Select country"
             >
               {countries.map((country) => (
                 <option key={country.code} value={country.code}>
                   {country.name}
                 </option>
-              ))}
+              ))} 
             </select>
           </div>
 

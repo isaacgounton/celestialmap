@@ -1,17 +1,16 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import { GoogleMap } from '../map/GoogleMap';
 import { LocationMarker } from '../map/LocationMarker';
 import { TopParishes } from '../parishes/TopParishes';
 import { MAPS_CONFIG } from '../../config/constants';
-import { getNearbyParishes } from '../../services/parishService';
 import { Parish } from '../../types/Parish';
 import { fetchAllParishes } from '../../lib/firebase';
 
 export function Home() {
   const navigate = useNavigate();
-  const { location, loading: geoLoading, error, refreshLocation } = useGeolocation();
+  const { location, loading: geoLoading, error: geoError, refreshLocation } = useGeolocation();
   const [parishes, setParishes] = useState<Parish[]>([]);
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,6 +22,22 @@ export function Home() {
   const handleParishClick = useCallback((parishId: string) => {
     navigate(`/parish/${parishId}`);
   }, [navigate]);
+
+  const getErrorMessage = (error: GeolocationPositionError | string) => {
+    if (typeof error === 'string') {
+      return error;
+    }
+    switch (error.code) {
+      case error.PERMISSION_DENIED:
+        return 'Location access denied. Please enable location services.';
+      case error.POSITION_UNAVAILABLE:
+        return 'Location information unavailable.';
+      case error.TIMEOUT:
+        return 'Location request timed out.';
+      default:
+        return 'Error accessing location.';
+    }
+  };
 
   useEffect(() => {
     const loadParishes = async () => {
@@ -39,6 +54,32 @@ export function Home() {
 
     loadParishes();
   }, []);
+
+  if (loading || geoLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (geoError) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="bg-red-50 p-4 rounded-lg">
+          <p className="text-red-700">
+            {getErrorMessage(geoError)}
+          </p>
+          <button 
+            onClick={refreshLocation}
+            className="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const center = location
     ? { lat: location.latitude, lng: location.longitude }

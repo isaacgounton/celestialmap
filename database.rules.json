@@ -1,0 +1,37 @@
+{
+  "rules": {
+    "parishes": {
+      ".read": true,
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      "$parishId": {
+        ".validate": "newData.hasChildren(['name', 'address', 'latitude', 'longitude'])",
+        "name": { ".validate": "newData.isString()" },
+        "address": {
+          ".validate": "newData.hasChildren(['street', 'city', 'province', 'country'])",
+          "street": { ".validate": "newData.isString()" },
+          "city": { ".validate": "newData.isString()" },
+          "province": { ".validate": "newData.isString()" },
+          "country": { ".validate": "newData.isString()" },
+          "postalCode": { ".validate": "newData.isString()" }
+        },
+        "latitude": { ".validate": "newData.isNumber()" },
+        "longitude": { ".validate": "newData.isNumber()" }
+      }
+    },
+    "users": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "admins": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+        ".validate": "newData.isBoolean()"
+      }
+    }
+  }
+}

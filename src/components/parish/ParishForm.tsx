@@ -40,6 +40,8 @@ export function ParishForm({ onSubmit, onCancel }: ParishFormProps) {
     onSubmit(formData);
   };
 
+  const generateId = (fieldName: string) => `parish-${fieldName.toLowerCase().replace(/\s+/g, '-')}`;
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -48,20 +50,23 @@ export function ParishForm({ onSubmit, onCancel }: ParishFormProps) {
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="col-span-2">
-              <label className="block mb-1">Parish Name</label>
+              <label htmlFor={generateId('name')} className="block mb-1">Parish Name</label>
               <input
+                id={generateId('name')}
                 type="text"
                 value={formData.name}
                 onChange={e => setFormData({...formData, name: e.target.value})}
                 className="w-full border rounded p-2"
                 required
+                aria-label="Parish name"
               />
             </div>
 
             {/* Address Section */}
             <div className="col-span-2">
-              <label className="block mb-1">Street Address</label>
+              <label htmlFor={generateId('street')} className="block mb-1">Street Address</label>
               <input
+                id={generateId('street')}
                 type="text"
                 value={formData.address.street}
                 onChange={e => setFormData({
@@ -70,12 +75,14 @@ export function ParishForm({ onSubmit, onCancel }: ParishFormProps) {
                 })}
                 className="w-full border rounded p-2"
                 required
+                aria-label="Street address"
               />
             </div>
 
             <div>
-              <label className="block mb-1">City</label>
+              <label htmlFor={generateId('city')} className="block mb-1">City</label>
               <input
+                id={generateId('city')}
                 type="text"
                 value={formData.address.city}
                 onChange={e => setFormData({
@@ -84,12 +91,14 @@ export function ParishForm({ onSubmit, onCancel }: ParishFormProps) {
                 })}
                 className="w-full border rounded p-2"
                 required
+                aria-label="City"
               />
             </div>
 
             <div>
-              <label className="block mb-1">Province/State</label>
+              <label htmlFor={generateId('province')} className="block mb-1">Province/State</label>
               <input
+                id={generateId('province')}
                 type="text"
                 value={formData.address.province}
                 onChange={e => setFormData({
@@ -98,12 +107,14 @@ export function ParishForm({ onSubmit, onCancel }: ParishFormProps) {
                 })}
                 className="w-full border rounded p-2"
                 required
+                aria-label="Province or state"
               />
             </div>
 
             <div>
-              <label className="block mb-1">Country</label>
+              <label htmlFor={generateId('country')} className="block mb-1">Country</label>
               <input
+                id={generateId('country')}
                 type="text"
                 value={formData.address.country}
                 onChange={e => setFormData({
@@ -112,12 +123,14 @@ export function ParishForm({ onSubmit, onCancel }: ParishFormProps) {
                 })}
                 className="w-full border rounded p-2"
                 required
+                aria-label="Country"
               />
             </div>
 
             <div>
-              <label className="block mb-1">Postal Code</label>
+              <label htmlFor={generateId('postal')} className="block mb-1">Postal Code</label>
               <input
+                id={generateId('postal')}
                 type="text"
                 value={formData.address.postalCode}
                 onChange={e => setFormData({
@@ -126,54 +139,65 @@ export function ParishForm({ onSubmit, onCancel }: ParishFormProps) {
                 })}
                 className="w-full border rounded p-2"
                 required
+                aria-label="Postal code"
               />
             </div>
 
             {/* Contact Information */}
             <div className="col-span-2">
-              <label className="block mb-1">Parish Leader</label>
+              <label htmlFor={generateId('leader')} className="block mb-1">Parish Leader</label>
               <input
+                id={generateId('leader')}
                 type="text"
                 value={formData.leaderName}
                 onChange={e => setFormData({...formData, leaderName: e.target.value})}
                 className="w-full border rounded p-2"
+                aria-label="Parish leader name"
               />
             </div>
 
             <div>
-              <label className="block mb-1">Phone</label>
+              <label htmlFor={generateId('phone')} className="block mb-1">Phone</label>
               <input
+                id={generateId('phone')}
                 type="tel"
                 value={formData.phone}
                 onChange={e => setFormData({...formData, phone: e.target.value})}
                 className="w-full border rounded p-2"
+                aria-label="Phone number"
+                placeholder="e.g., +1 234 567 8900"
               />
             </div>
 
             <div>
-              <label className="block mb-1">Email</label>
+              <label htmlFor={generateId('email')} className="block mb-1">Email</label>
               <input
+                id={generateId('email')}
                 type="email"
                 value={formData.email}
                 onChange={e => setFormData({...formData, email: e.target.value})}
                 className="w-full border rounded p-2"
+                aria-label="Email address"
+                placeholder="parish@example.com"
               />
             </div>
 
             <div className="col-span-2">
-              <label className="block mb-1">Website</label>
+              <label htmlFor={generateId('website')} className="block mb-1">Website</label>
               <input
+                id={generateId('website')}
                 type="url"
                 value={formData.website}
                 onChange={e => setFormData({...formData, website: e.target.value})}
                 className="w-full border rounded p-2"
                 placeholder="https://"
+                aria-label="Website URL"
               />
             </div>
 
             <div>
               <div className="flex items-center justify-between">
-                <label className="block mb-1">Latitude</label>
+                <label htmlFor={generateId('latitude')} className="block mb-1">Latitude</label>
                 <a
                   href="https://locatorgabrielle.web.app/"
                   target="_blank"
@@ -184,24 +208,28 @@ export function ParishForm({ onSubmit, onCancel }: ParishFormProps) {
                 </a>
               </div>
               <input
+                id={generateId('latitude')}
                 type="number"
                 step="0.000001"
                 value={formData.latitude}
                 onChange={e => setFormData({...formData, latitude: parseFloat(e.target.value) || 0})}
                 className="w-full border rounded p-2"
                 required
+                aria-label="Latitude coordinate"
               />
             </div>
 
             <div>
-              <label className="block mb-1">Longitude</label>
+              <label htmlFor={generateId('longitude')} className="block mb-1">Longitude</label>
               <input
+                id={generateId('longitude')}
                 type="number"
                 step="0.000001"
                 value={formData.longitude}
                 onChange={e => setFormData({...formData, longitude: parseFloat(e.target.value) || 0})}
                 className="w-full border rounded p-2"
                 required
+                aria-label="Longitude coordinate"
               />
             </div>
           </div>

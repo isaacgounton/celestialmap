@@ -1,5 +1,3 @@
-
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ParishList } from '../parish/ParishList';
 import { useParishes } from '../../hooks/useParishes';

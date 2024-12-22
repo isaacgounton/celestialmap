@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { FiUser, FiEdit2, FiCreditCard, FiLock, FiHeart, FiMapPin, FiActivity, FiBell } from 'react-icons/fi';
 import { TabPanel, Tabs } from '../ui/Tabs';
@@ -12,6 +12,48 @@ import {
 import { ParishForm } from '../parish/ParishForm';
 import { createParish } from '../../lib/firebase';
 import toast from 'react-hot-toast';
+import type { AuthUser } from '../../types/auth';
+
+interface ParishFormData {
+  email: string;
+  name: string;
+  leaderName: string;
+  phone: string;
+  address: {
+    street: string;
+    city: string;
+    province: string;
+    country: string;
+    postalCode: string;
+  };
+  latitude: number;
+  longitude: number;
+  description?: string;
+  photos: string[]; // Make photos required with empty array default
+  openingHours: {
+    monday?: string;
+    tuesday?: string;
+    wednesday?: string;
+    thursday?: string;
+    friday?: string;
+    saturday?: string;
+    sunday?: string;
+  };
+}
+
+interface PersonalInformationPanelProps {
+  user: AuthUser;
+  isEditing: boolean;
+  setIsEditing: (value: boolean) => void;
+}
+
+interface FormFieldProps {
+  label: string;
+  value: string;
+  isEditing: boolean;
+  type?: 'text' | 'email' | 'tel' | 'select';
+  options?: string[];
+}
 
 export function Profile() {
   const { user, logout } = useAuth();
@@ -23,15 +65,26 @@ export function Profile() {
     return <div>Please log in to view your profile</div>;
   }
 
-  const handleParishSubmit = async (parishData) => {
+  const handleParishSubmit = async (parishData: ParishFormData) => {
     try {
       const toastId = toast.loading('Adding parish...');
-      await createParish(parishData);
+      await createParish({
+        ...parishData,
+        photos: parishData.photos || [] // Ensure photos is never undefined
+      });
       toast.success('Parish added successfully!', { id: toastId });
       setShowParishForm(false);
     } catch (error) {
       console.error('Error creating parish:', error);
       toast.error('Failed to add parish. Please try again.');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      toast.error('Failed to logout. Please try again.');
     }
   };
 
@@ -47,22 +100,33 @@ export function Profile() {
                 alt={user.displayName}
                 className="w-24 h-24 rounded-full"
               />
-              <button className="absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full text-white hover:bg-blue-700">
+              <button 
+                className="absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full text-white hover:bg-blue-700"
+                aria-label="Edit profile picture"
+              >
                 <FiEdit2 size={16} />
               </button>
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">{user.displayName}</h1>
               <p className="text-gray-600">{user.email}</p>
-              <p className="text-sm text-gray-500">Member since {user.createdAt.toLocaleDateString()}</p>
+              <p className="text-sm text-gray-500">Member since {user.createdAt?.toLocaleDateString() ?? 'N/A'}</p>
             </div>
           </div>
-          <Button
-            variant="primary"
-            onClick={() => setShowParishForm(true)}
-          >
-            Add my parish
-          </Button>
+          <div className="space-x-4">
+            <Button
+              variant="primary"
+              onClick={() => setShowParishForm(true)}
+            >
+              Add my parish
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -100,7 +164,7 @@ export function Profile() {
 
           {/* My Parishes Section */}
           {activeTab === 'parishes' && (
-            <AdoptedParishesPanel parishes={user.adoptedParishes} />
+            <AdoptedParishesPanel parishes={user.adoptedParishes ?? []} />
           )}
 
           {/* Security Section */}
@@ -134,7 +198,7 @@ export function Profile() {
 }
 
 // Panel Components
-function PersonalInformationPanel({ user, isEditing, setIsEditing }) {
+function PersonalInformationPanel({ user, isEditing, setIsEditing }: PersonalInformationPanelProps) {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-6">
@@ -174,14 +238,17 @@ function PersonalInformationPanel({ user, isEditing, setIsEditing }) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="user-bio" className="block text-sm font-medium text-gray-700 mb-1">
             Bio
           </label>
           <textarea
+            id="user-bio"
             className="w-full px-3 py-2 border rounded-md"
             rows={4}
             disabled={!isEditing}
             defaultValue={user.bio || ''}
+            aria-label="User biography"
+            placeholder="Tell us about yourself..."
           />
         </div>
       </div>
@@ -197,24 +264,46 @@ function SecurityPanel() {
         <div>
           <h3 className="text-lg font-medium mb-4">Change Password</h3>
           <form className="space-y-4">
-            <input
-              type="password"
-              placeholder="Current Password"
-              className="w-full px-3 py-2 border rounded-md"
-            />
-            <input
-              type="password"
-              placeholder="New Password"
-              className="w-full px-3 py-2 border rounded-md"
-            />
-            <input
-              type="password"
-              placeholder="Confirm New Password"
-              className="w-full px-3 py-2 border rounded-md"
-            />
+            <div>
+              <label htmlFor="currentPassword" className="block text-sm font-medium mb-2">
+                Current Password
+              </label>
+              <input
+                id="currentPassword"
+                type="password"
+                placeholder="Enter your current password"
+                className="w-full px-3 py-2 border rounded-md"
+                aria-label="Current password input"
+              />
+            </div>
+            <div>
+              <label htmlFor="newPassword" className="block text-sm font-medium mb-2">
+                New Password
+              </label>
+              <input
+                id="newPassword"
+                type="password"
+                placeholder="Enter your new password"
+                className="w-full px-3 py-2 border rounded-md"
+                aria-label="New password input"
+              />
+            </div>
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">
+                Confirm New Password
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                placeholder="Confirm your new password"
+                className="w-full px-3 py-2 border rounded-md"
+                aria-label="Confirm new password input"
+              />
+            </div>
             <Button variant="primary">Update Password</Button>
           </form>
         </div>
+
         <div>
           <h3 className="text-lg font-medium mb-4">Two-Factor Authentication</h3>
           <div className="flex items-center justify-between">
@@ -268,17 +357,20 @@ function BillingPanel() {
 }
 
 // Helper Components
-function FormField({ label, value, isEditing, type = 'text', options = [] }) {
+function FormField({ label, value, isEditing, type = 'text', options = [] }: FormFieldProps) {
+  const id = `field-${label.toLowerCase().replace(/\s+/g, '-')}`;
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
         {label}
       </label>
       {type === 'select' ? (
         <select
+          id={id}
           className="w-full px-3 py-2 border rounded-md"
           disabled={!isEditing}
           defaultValue={value}
+          aria-label={`Select ${label.toLowerCase()}`}
         >
           {options.map(option => (
             <option key={option} value={option}>{option}</option>
@@ -286,10 +378,12 @@ function FormField({ label, value, isEditing, type = 'text', options = [] }) {
         </select>
       ) : (
         <input
+          id={id}
           type={type}
           className="w-full px-3 py-2 border rounded-md"
           disabled={!isEditing}
           defaultValue={value}
+          aria-label={`${label} input field`}
         />
       )}
     </div>

@@ -1,4 +1,3 @@
-import React from "react";
 import { Parish } from "../../types/Parish";
 import { ParishListItem } from "./ParishListItem";
 

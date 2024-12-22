@@ -1,4 +1,3 @@
-import React from 'react';
 import { FiHome, FiMapPin, FiBookOpen, FiShoppingBag, FiShoppingCart, FiTool } from 'react-icons/fi';
 import { GiKnifeFork, GiGasStove } from 'react-icons/gi';
 import { Link, useLocation } from 'react-router-dom';
@@ -21,6 +20,13 @@ interface LeftNavigationProps {
 
 export function LeftNavigation({ isCollapsed }: LeftNavigationProps) {
   const location = useLocation();
+
+  const isActive = (path: string) => {
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname.startsWith(path);
+  };
 
   return (
     <div className={`h-screen bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ${
@@ -53,11 +59,17 @@ export function LeftNavigation({ isCollapsed }: LeftNavigationProps) {
             <li key={index}>
               <Link
                 to={item.path}
-                className={`flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg ${
+                className={`flex items-center px-4 py-2 ${
                   isCollapsed ? 'justify-center' : 'space-x-3'
-                }`}
+                } ${
+                  isActive(item.path)
+                    ? 'bg-primary text-white'
+                    : 'text-gray-700 hover:bg-gray-100'
+                } rounded-lg`}
               >
-                <span className="text-gray-500">{item.icon}</span>
+                <span className={isActive(item.path) ? 'text-white' : 'text-gray-500'}>
+                  {item.icon}
+                </span>
                 {!isCollapsed && <span>{item.label}</span>}
               </Link>
             </li>

@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2017",
+    "outDir": "lib",
+    "sourceMap": true,
+    
+    // Type Checking
+    "strict": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    
+    // Module Resolution
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    
+    // Advanced
+    "esModuleInterop": true,
+    "resolveJsonModule": true
+  },
+  "compileOnSave": true,
+  "include": [
+    "src/**/*"
+  ]
+}

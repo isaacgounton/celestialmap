@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Parish } from "../../types/Parish";
 
 interface ParishCardProps {
@@ -7,6 +6,8 @@ interface ParishCardProps {
 }
 
 export function ParishCard({ parish, onTap }: ParishCardProps) {
+    const formattedAddress = `${parish.address.street}, ${parish.address.city}, ${parish.address.province}`;
+    
     return (
         <div 
             className="bg-white p-4 rounded-lg shadow-md m-2 grid grid-cols-[auto,1fr] gap-4 cursor-pointer"
@@ -21,7 +22,7 @@ export function ParishCard({ parish, onTap }: ParishCardProps) {
                 {parish.name}
             </h3>
             <p className="text-gray-600">
-                {parish.address}
+                {formattedAddress}
             </p>
         </div>
     );

@@ -9,6 +9,7 @@ import {
     onAuthStateChanged
 } from 'firebase/auth';
 import { User } from '../types/auth';
+import type { AuthUser } from "../types/auth";
 
 export interface LoginCredentials {
     email: string;
@@ -19,15 +20,17 @@ export interface RegisterData extends LoginCredentials {
     name: string;
 }
 
-export async function login(credentials: LoginCredentials): Promise<User> {
-    const userCredential = await signInWithEmailAndPassword(
-        auth,
-        credentials.email,
-        credentials.password
-    );
-
-    return convertFirebaseUserToUser(userCredential);
-}
+export const login = async ({ email, password }: { email: string; password: string }): Promise<AuthUser> => {
+    const response = await signInWithEmailAndPassword(auth, email, password);
+    
+    return {
+        id: response.user.uid,
+        displayName: response.user.displayName || '',
+        email: response.user.email || '',
+        avatar: response.user.photoURL || undefined,
+        role: 'user',
+    };
+};
 
 export async function register(data: RegisterData): Promise<User> {
     const userCredential = await createUserWithEmailAndPassword(

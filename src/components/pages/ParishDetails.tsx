@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FiPhone, FiGlobe, FiMapPin, FiClock, FiChevronRight, FiHeart } from 'react-icons/fi';
 import { getParishById } from '../../services/parishService';
