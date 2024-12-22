@@ -7,6 +7,10 @@ interface ImportButtonProps {
   endpoint: string;
   label: string;
   countryCode?: string;
+  source: 'places' | 'mymaps' | 'spreadsheet';
+  data?: {
+    url?: string;
+  };
 }
 
 interface ImportResponse {
@@ -14,17 +18,29 @@ interface ImportResponse {
   message: string;
 }
 
-export const ImportButton = ({ endpoint, label, countryCode = 'NG' }: ImportButtonProps) => {
+export const ImportButton = ({ endpoint, label, countryCode = 'NG', source, data }: ImportButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleImport = async () => {
     setIsLoading(true);
     try {
       const functions = getFunctions();
-      console.log('Starting import with countryCode:', countryCode);
+      console.log(`Starting ${source} import...`);
       
-      const importFn = httpsCallable<{countryCode?: string}, ImportResponse>(functions, endpoint);
-      const result = await importFn({ countryCode });
+      const importFn = httpsCallable<{
+        countryCode?: string;
+        source: string;
+        url?: string;
+      }, ImportResponse>(
+        functions, 
+        getEndpoint(source, endpoint)
+      );
+      
+      const result = await importFn({ 
+        countryCode, 
+        source,
+        ...data
+      });
       
       console.log('Import result:', result);
       toast.success(`Successfully imported ${result.data.count} items`);
@@ -37,11 +53,36 @@ export const ImportButton = ({ endpoint, label, countryCode = 'NG' }: ImportButt
     }
   };
 
+  const getEndpoint = (source: string, defaultEndpoint: string) => {
+    switch (source) {
+      case 'mymaps':
+        return 'importExistingPlaces';
+      case 'spreadsheet':
+        return 'importFromSpreadsheetFn';
+      default:
+        return defaultEndpoint;
+    }
+  };
+
+  const getButtonVariant = (source: string) => {
+    switch (source) {
+      case 'places':
+        return 'primary';
+      case 'mymaps':
+        return 'secondary';
+      case 'spreadsheet':
+        return 'outline';
+      default:
+        return 'primary';
+    }
+  };
+
   return (
     <Button
       onClick={handleImport}
       disabled={isLoading}
-      variant="primary"
+      variant={getButtonVariant(source)}
+      className="min-w-[200px]"
     >
       {isLoading ? 'Importing...' : label}
     </Button>

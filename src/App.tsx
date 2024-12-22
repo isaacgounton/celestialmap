@@ -18,17 +18,17 @@ const libraries: Libraries = ['places', 'geometry', 'drawing'];
 
 const App = () => {
   return (
-    <LoadScriptNext
-      googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
-      libraries={libraries}
-      version="weekly"
-      loadingElement={
-        <div className="w-full h-screen flex items-center justify-center">
-          Loading Maps...
-        </div>
-      }
-    >
-      <AuthProvider>
+    <AuthProvider>
+      <LoadScriptNext
+        googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+        libraries={libraries}
+        version="weekly"
+        loadingElement={
+          <div className="w-full h-screen flex items-center justify-center">
+            Loading Maps...
+          </div>
+        }
+      >
         <div className="min-h-screen bg-gray-50">
           <BrowserRouter>
             <Layout>
@@ -60,8 +60,8 @@ const App = () => {
           </BrowserRouter>
           <Toaster position="top-right" />
         </div>
-      </AuthProvider>
-    </LoadScriptNext>
+      </LoadScriptNext>
+    </AuthProvider>
   );
 }
 

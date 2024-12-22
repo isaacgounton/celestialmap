@@ -2,15 +2,15 @@ import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { register, loginWithGoogle } from "../../services/authService";
 import { isValidEmail } from "../../utils/validation";
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';  // Changed from contexts to hooks
 
 interface RegisterFormProps {
     onClose?: () => void;
 }
 
 export function RegisterForm({ onClose }: RegisterFormProps) {
-    const { setIsAuthenticated } = useAuth();
     const navigate = useNavigate();
+    const { loading: authLoading } = useAuth();  // Only use what we need
     const [name, setName] = React.useState("");
     const [email, setEmail] = React.useState("");
     const [password, setPassword] = React.useState("");
@@ -19,9 +19,7 @@ export function RegisterForm({ onClose }: RegisterFormProps) {
     const [loading, setLoading] = React.useState(false);
 
     const handleSuccess = async () => {
-        setIsAuthenticated(true);
-        // Add small delay to allow auth state to update
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Remove setIsAuthenticated since it's handled by the context
         if (onClose) {
             onClose();
         }
@@ -95,7 +93,7 @@ export function RegisterForm({ onClose }: RegisterFormProps) {
                 <div className="p-8 space-y-6">
                     <button
                         onClick={handleGoogleRegister}
-                        disabled={loading}
+                        disabled={loading || authLoading}
                         className="w-full bg-white text-gray-700 border-2 border-gray-200 py-3 px-4 rounded-xl hover:bg-gray-50 disabled:opacity-50 flex items-center justify-center gap-3 transition duration-200 ease-in-out shadow-sm"
                     >
                         <img 
@@ -169,16 +167,16 @@ export function RegisterForm({ onClose }: RegisterFormProps) {
 
                     <button
                         onClick={handleRegister}
-                        disabled={loading}
+                        disabled={loading || authLoading}
                         className="w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 disabled:opacity-50 font-medium transition duration-200 ease-in-out transform hover:translate-y-[-1px] active:translate-y-0"
                     >
-                        {loading ? "Creating account..." : "Create Account"}
+                        {loading || authLoading ? "Creating account..." : "Create Account"}
                     </button>
 
                     <div className="text-center">
                         <button
                             onClick={handleLoginClick}
-                            disabled={loading}
+                            disabled={loading || authLoading}
                             className="text-blue-600 hover:text-blue-800 font-medium"
                         >
                             Already have an account? <span className="underline">Sign in</span>

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FiMenu, FiX, FiUser, FiChevronDown, FiSidebar } from 'react-icons/fi';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';  // Updated import path
 import { countries } from '../../data/countries';
+import { useAdmin } from '../../hooks/useAdmin';  // Add this import
 
 interface HeaderProps {
   isCollapsed: boolean;
@@ -12,7 +13,8 @@ interface HeaderProps {
 }
 
 export function Header({ isCollapsed, onToggleCollapse, selectedCountry, onCountryChange }: HeaderProps) {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
+  const { isAdmin } = useAdmin();  // Add this hook
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const location = useLocation();
@@ -94,6 +96,15 @@ export function Header({ isCollapsed, onToggleCollapse, selectedCountry, onCount
                     >
                       Profile
                     </Link>
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setIsProfileDropdownOpen(false)}
+                      >
+                        Admin Dashboard
+                      </Link>
+                    )}
                     <button
                       onClick={() => {
                         logout();

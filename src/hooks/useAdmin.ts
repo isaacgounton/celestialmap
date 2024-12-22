@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from './useAuth';
 import { ref, get } from 'firebase/database';
 import { db } from '../lib/firebase';
-import { useAuth } from './useAuth';
 
 export const useAdmin = () => {
   const { user } = useAuth();
@@ -10,21 +10,16 @@ export const useAdmin = () => {
 
   useEffect(() => {
     const checkAdminStatus = async () => {
-      if (!user?.id) {
-        console.log('No user or user ID found');
+      if (!user) {
         setIsAdmin(false);
         setLoading(false);
         return;
       }
 
       try {
-        console.log('Checking admin status for user ID:', user.id);
-        const adminRef = ref(db, `admins/${user.id}`);
+        const adminRef = ref(db, `admins/${user.uid}`);
         const snapshot = await get(adminRef);
-        const adminValue = snapshot.val();
-        console.log('Admin node value:', adminValue);
-        setIsAdmin(snapshot.exists() && adminValue === true);
-        console.log('Final admin status:', isAdmin);
+        setIsAdmin(snapshot.val() === true);
       } catch (error) {
         console.error('Error checking admin status:', error);
         setIsAdmin(false);

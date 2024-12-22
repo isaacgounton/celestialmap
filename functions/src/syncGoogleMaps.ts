@@ -45,7 +45,7 @@ const auth = new GoogleAuth({
   scopes: ['https://www.googleapis.com/auth/mapsengine']
 });
 
-const fetchMapFeatures = async () => {
+export const fetchMapFeatures = async () => {
   const client = await auth.getClient();
   const token = await client.getAccessToken();
   
@@ -73,7 +73,7 @@ const parseAddress = (fullAddress: string) => {
   };
 };
 
-const convertToParish = (feature: any): Partial<Parish> => {
+export const convertToParish = (feature: any): Partial<Parish> => {
   const now = new Date();
   const address = parseAddress(feature.properties.address || '');
   
@@ -230,16 +230,22 @@ export const addPersonalPlace = functions.https.onCall(async (data, context) => 
   }
 });
 
-// Initial import of existing places
-export const importExistingPlaces = functions.https.onRequest(async (req, res) => {
-  if (req.method !== 'POST') {
-    res.status(405).send('Method Not Allowed');
-    return;
+// Convert to Callable function
+export const importExistingPlaces = functions.https.onCall(async (data, context) => {
+  // Verify authentication
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'Must be authenticated to import places'
+    );
   }
 
   try {
     if (!config.maps_api_key || !config.my_maps_id) {
-      throw new Error('Missing required Google Maps configuration');
+      throw new functions.https.HttpsError(
+        'failed-precondition',
+        'Missing required Google Maps configuration'
+      );
     }
 
     // Fetch existing parishes to check for duplicates
@@ -261,7 +267,6 @@ export const importExistingPlaces = functions.https.onRequest(async (req, res) =
       const updates: { [key: string]: any } = {};
 
       for (const feature of batch) {
-        // Skip if already imported
         if (existingIds.has(feature.properties.id)) {
           continue;
         }
@@ -273,24 +278,21 @@ export const importExistingPlaces = functions.https.onRequest(async (req, res) =
         }
       }
 
-      // Perform batch update if there are new places
       if (Object.keys(updates).length > 0) {
         await parishesRef.update(updates);
       }
     }
 
-    functions.logger.info(`Imported ${importedCount} existing places from Google My Maps`);
-    res.status(200).json({
-      success: true,
-      message: `Successfully imported ${importedCount} places`,
-      imported: importedCount
-    });
+    return {
+      count: importedCount,
+      message: `Successfully imported ${importedCount} places`
+    };
   } catch (error) {
-    functions.logger.error('Import failed:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Import failed',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    console.error('Import failed:', error);
+    throw new functions.https.HttpsError(
+      'internal',
+      'Import failed',
+      error instanceof Error ? error.message : 'Unknown error'
+    );
   }
 });

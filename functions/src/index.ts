@@ -1,42 +1,64 @@
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import { importPlacesFromGoogle } from './importPlaces';
+import { importFromSpreadsheet } from './importSpreadsheet';
+import { 
+  fetchMapFeatures,
+  convertToParish
+} from './syncGoogleMaps';
 
 admin.initializeApp();
 
 // Add region configuration
 const regionalFunctions = functions.region('us-central1');
 
-export {
-  syncGoogleMyMaps,
-  triggerSync,
-  onParishUpdate,
-  addPersonalPlace,
-  importExistingPlaces
-} from './syncGoogleMaps';
-
-export {
-  setAdminClaim,
-  checkAdminStatus
-} from './auth';
-
-export const setAdmin = regionalFunctions.https.onCall(async (data, context) => {
+// Convert importExistingPlaces to a regional function
+export const importExistingPlaces = regionalFunctions.https.onCall(async (data, context) => {
   if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
+    throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
   }
 
-  // Only super admins can create other admins
   const adminRef = admin.database().ref(`admins/${context.auth.uid}`);
-  const adminSnapshot = await adminRef.once('value');
-  
-  if (!adminSnapshot.val()) {
-    throw new functions.https.HttpsError('permission-denied', 'Only admins can create other admins');
+  const isAdmin = (await adminRef.get()).val() === true;
+
+  if (!isAdmin) {
+    throw new functions.https.HttpsError('permission-denied', 'Must be an admin');
   }
 
-  const { uid, isAdmin } = data;
-  await admin.database().ref(`admins/${uid}`).set(isAdmin);
-  
-  return { success: true };
+  const config = functions.config().google || {};
+  if (!config.maps_api_key || !config.my_maps_id) {
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      'Missing Google Maps configuration'
+    );
+  }
+
+  try {
+    console.log('Starting MyMaps import...');
+    const features = await fetchMapFeatures();  // Now using directly imported function
+    const parishesRef = admin.database().ref('parishes');
+    let importCount = 0;
+
+    for (const feature of features) {
+      const parish = convertToParish(feature);  // Now using directly imported function
+      if (parish.sourceId) {
+        await parishesRef.child(parish.sourceId).set(parish);
+        importCount++;
+      }
+    }
+
+    return {
+      count: importCount,
+      message: `Successfully imported ${importCount} parishes`
+    };
+  } catch (error) {
+    console.error('MyMaps import failed:', error);
+    throw new functions.https.HttpsError(
+      'internal',
+      'Import failed',
+      error instanceof Error ? error.message : 'Unknown error'
+    );
+  }
 });
 
 interface ImportPlacesData {
@@ -68,5 +90,35 @@ export const importFromGooglePlaces = regionalFunctions.https.onCall(async (data
       ? error.message 
       : 'An unknown error occurred';
     throw new functions.https.HttpsError('internal', `Import failed: ${errorMessage}`);
+  }
+});
+
+export const importFromSpreadsheetFn = regionalFunctions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
+  }
+
+  const adminRef = admin.database().ref(`admins/${context.auth.uid}`);
+  const isAdmin = (await adminRef.get()).val() === true;
+
+  if (!isAdmin) {
+    throw new functions.https.HttpsError('permission-denied', 'Must be an admin');
+  }
+
+  try {
+    const { url } = data;
+    if (!url) {
+      throw new functions.https.HttpsError('invalid-argument', 'Spreadsheet URL is required');
+    }
+
+    const result = await importFromSpreadsheet(url);
+    return result;
+  } catch (error) {
+    console.error('Spreadsheet import failed:', error);
+    throw new functions.https.HttpsError(
+      'internal',
+      'Import failed',
+      error instanceof Error ? error.message : 'Unknown error'
+    );
   }
 });

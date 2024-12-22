@@ -51,17 +51,59 @@ export function Admin() {
 
       {/* Import Controls */}
       <section className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4">Data Management</h2>
-        <div className="flex gap-4">
-          <ImportButton
-            endpoint="importFromGooglePlaces"
-            label="Import from Google Places"
-            countryCode="NG"
-          />
-          <ImportButton
-            endpoint="importFromSpreadsheet"
-            label="Import from Spreadsheet"
-          />
+        <h2 className="text-xl font-semibold mb-4">Data Import</h2>
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-lg font-medium mb-2">Google Places Import</h3>
+            <div className="flex gap-4">
+              <ImportButton
+                endpoint="importFromGooglePlaces"
+                label="Import Benin Parishes"
+                countryCode="BJ"
+                source="places"
+              />
+              <ImportButton
+                endpoint="importFromGooglePlaces"
+                label="Import Nigeria Parishes"
+                countryCode="NG"
+                source="places"
+              />
+              <ImportButton
+                endpoint="importFromGooglePlaces"
+                label="Import Canada Parishes"
+                countryCode="CA"
+                source="places"
+              />
+              <ImportButton
+                endpoint="importFromGooglePlaces"
+                label="Import UK Parishes"
+                countryCode="GB"
+                source="places"
+              />
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-medium mb-2">Custom Maps Import</h3>
+            <div className="flex gap-4">
+              <ImportButton
+                endpoint="importExistingPlaces"
+                label="Import from My Maps"
+                source="mymaps"
+              />
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-medium mb-2">Manual Data Import</h3>
+            <div className="flex gap-4">
+              <ImportButton
+                endpoint="importFromSpreadsheet"
+                label="Import from Spreadsheet"
+                source="spreadsheet"
+              />
+            </div>
+          </div>
         </div>
       </section>
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { FiUser, FiEdit2, FiCreditCard, FiLock, FiHeart, FiMapPin, FiActivity, FiBell } from 'react-icons/fi';
 import { TabPanel, Tabs } from '../ui/Tabs';
 import { Button } from '../ui/Button';
@@ -12,7 +12,7 @@ import {
 import { ParishForm } from '../parish/ParishForm';
 import { createParish } from '../../lib/firebase';
 import toast from 'react-hot-toast';
-import type { AuthUser } from '../../types/auth';
+import type { User } from '../../types/User';
 
 interface ParishFormData {
   email: string;
@@ -42,7 +42,7 @@ interface ParishFormData {
 }
 
 interface PersonalInformationPanelProps {
-  user: AuthUser;
+  user: User & { displayName: string }; // Add displayName requirement
   isEditing: boolean;
   setIsEditing: (value: boolean) => void;
 }
@@ -96,8 +96,8 @@ export function Profile() {
           <div className="flex items-center space-x-6">
             <div className="relative">
               <img
-                src={user.avatar}
-                alt={user.displayName}
+                src={user.photoURL || user.avatar || '/default-avatar.png'}
+                alt={user.displayName || 'User'}
                 className="w-24 h-24 rounded-full"
               />
               <button 
@@ -108,9 +108,11 @@ export function Profile() {
               </button>
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{user.displayName}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{user.displayName || 'User'}</h1>
               <p className="text-gray-600">{user.email}</p>
-              <p className="text-sm text-gray-500">Member since {user.createdAt?.toLocaleDateString() ?? 'N/A'}</p>
+              <p className="text-sm text-gray-500">
+                Member since {new Date(user.createdAt).toLocaleDateString()}
+              </p>
             </div>
           </div>
           <div className="space-x-4">

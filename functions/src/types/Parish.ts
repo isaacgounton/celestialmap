@@ -20,8 +20,8 @@ export interface Parish {
   openingHours: {
     [key: string]: string;
   };
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string;  // Change from Date to string
+  updatedAt: string;  // Change from Date to string
   importSource?: 'google_places' | 'google_my_maps' | 'manual' | 'import';
   sourceId?: string;
 }

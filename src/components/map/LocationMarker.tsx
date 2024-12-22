@@ -18,28 +18,36 @@ export function LocationMarker({ position, title, onClick, isUserLocation, isPar
       return {
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
-          scale: 10,
-          fillColor: "#3B82F6",
-          fillOpacity: 0.9,
-          strokeColor: "#1D4ED8",
-          strokeWeight: 3,
-          strokeOpacity: 0.8
+          scale: 12,
+          fillColor: "#60A5FA", // Blue-400
+          fillOpacity: 0.6,
+          strokeColor: "#2563EB", // Blue-600
+          strokeWeight: 2,
+          strokeOpacity: 1,
         },
+        // Pulsing animation effect
+        animation: google.maps.Animation.BOUNCE,
         zIndex: 2
       };
     }
     if (isParish) {
       return {
         icon: {
-          path: "M 0,0 C -2,-20 -10,-22 -10,-30 A 10,10 0 1,1 10,-30 C 10,-22 2,-20 0,0 z",
-          fillColor: "#8B5CF6",
+          // Custom church cross shape
+          path: `M 0,-30 
+                 L 0,-20 L 10,-20 L 10,-10 L 0,-10 
+                 L 0,0 L -10,0 L -10,10 L 10,10 L 10,0 
+                 L 0,0 L 0,-10 L -10,-10 L -10,-20 L 0,-20 Z`,
+          fillColor: "#7C3AED", // Violet-600
           fillOpacity: 0.9,
-          strokeColor: "#6D28D9",
+          strokeColor: "#4C1D95", // Violet-900
           strokeWeight: 2,
-          strokeOpacity: 0.8,
-          scale: 1.5,
+          strokeOpacity: 1,
+          scale: 0.8,
           anchor: new google.maps.Point(0, 0),
         },
+        // Smooth drop animation
+        animation: google.maps.Animation.DROP,
         zIndex: 1
       };
     }
@@ -52,7 +60,6 @@ export function LocationMarker({ position, title, onClick, isUserLocation, isPar
       title={title}
       onClick={onClick}
       options={options}
-      animation={google.maps.Animation.DROP}
     />
   );
 }
