@@ -1,15 +1,23 @@
 import * as admin from 'firebase-admin';
+import * as functions from 'firebase-functions';
 import { Client, PlaceType1 } from '@googlemaps/google-maps-services-js';
-import { Parish } from '../../src/types/Parish';
+import { Parish } from './types/Parish';
 
 const client = new Client({});
 
 export const importPlacesFromGoogle = async (countryCode: string = 'NG') => {
+  const config = functions.config();
+  const apiKey = config.google?.maps_key;
+  
+  if (!apiKey) {
+    throw new Error('Google Maps API key not configured');
+  }
+
   const searchQuery = 'Celestial Church of Christ';
   const places = await client.textSearch({
     params: {
       query: searchQuery,
-      key: process.env.GOOGLE_MAPS_API_KEY || '',
+      key: apiKey,
       type: PlaceType1.church,
       region: countryCode
     }
@@ -31,7 +39,7 @@ export const importPlacesFromGoogle = async (countryCode: string = 'NG') => {
     const details = await client.placeDetails({
       params: {
         place_id: place.place_id,
-        key: process.env.GOOGLE_MAPS_API_KEY || '',
+        key: apiKey,
         fields: ['formatted_phone_number', 'website', 'opening_hours']
       }
     });
@@ -54,7 +62,7 @@ export const importPlacesFromGoogle = async (countryCode: string = 'NG') => {
       leaderName: '',
       description: place.formatted_address,
       photos: place.photos?.map(p => 
-        `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${p.photo_reference}&key=${process.env.GOOGLE_MAPS_API_KEY}`
+        `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${p.photo_reference}&key=${apiKey}`
       ) || [],
       openingHours: details.data.result.opening_hours?.weekday_text?.reduce((acc, curr) => {
         const [day, hours] = curr.split(': ');

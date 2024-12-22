@@ -3,23 +3,23 @@
     "module": "commonjs",
     "target": "es2017",
     "outDir": "lib",
+    "rootDir": "src",
     "sourceMap": true,
-    
-    // Type Checking
     "strict": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    
-    // Module Resolution
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    
-    // Advanced
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "noImplicitReturns": true,
+    "noUnusedLocals": true
   },
   "compileOnSave": true,
   "include": [
-    "src/**/*"
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "lib"
   ]
 }

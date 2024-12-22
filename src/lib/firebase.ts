@@ -56,7 +56,7 @@ export const addPersonalMapPlace = async (placeData: {
   location: { lat: number; lng: number };
   placeId: string;
 }) => {
-  const now = new Date();
+  const now = new Date().toISOString();
   const parish: Partial<Parish> = {
     id: `personal_${placeData.placeId}`,
     name: placeData.name,
@@ -67,7 +67,6 @@ export const addPersonalMapPlace = async (placeData: {
     updatedAt: now,
     importSource: 'manual',
     sourceId: placeData.placeId,
-    lastSynced: now.toISOString(),
     leaderName: '',
     phone: '',
     email: '',

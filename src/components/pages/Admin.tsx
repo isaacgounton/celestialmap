@@ -56,6 +56,7 @@ export function Admin() {
           <ImportButton
             endpoint="importFromGooglePlaces"
             label="Import from Google Places"
+            countryCode="NG"
           />
           <ImportButton
             endpoint="importFromSpreadsheet"

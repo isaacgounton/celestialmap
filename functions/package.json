@@ -1,29 +1,29 @@
 {
   "name": "functions",
   "scripts": {
-    "prebuild": "rimraf lib",
-    "build": "tsc",
+    "clean": "rimraf lib",
+    "build:prepare": "npm run clean && mkdir lib",
+    "build": "npm run build:prepare && tsc",
     "serve": "npm run build && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
-    "deploy": "firebase deploy --only functions",
+    "deploy": "npm run build && firebase deploy --only functions",
     "logs": "firebase functions:log"
-  },
-  "engines": {
-    "node": "18"
   },
   "main": "lib/index.js",
   "dependencies": {
     "@googlemaps/google-maps-services-js": "^3.4.0",
-    "axios": "^1.6.2",
-    "firebase-admin": "^13.0.2",
-    "firebase-functions": "^4.5.0",
-    "google-auth-library": "^9.4.1"
+    "firebase-admin": "^11.11.1",
+    "firebase-functions": "^4.5.0"
   },
   "devDependencies": {
+    "@types/node": "^18.0.0",
     "firebase-functions-test": "^3.1.0",
     "rimraf": "^5.0.5",
     "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": "18"
   },
   "private": true
 }

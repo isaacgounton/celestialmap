@@ -4,6 +4,9 @@ import { importPlacesFromGoogle } from './importPlaces';
 
 admin.initializeApp();
 
+// Add region configuration
+const regionalFunctions = functions.region('us-central1');
+
 export {
   syncGoogleMyMaps,
   triggerSync,
@@ -17,7 +20,7 @@ export {
   checkAdminStatus
 } from './auth';
 
-export const setAdmin = functions.https.onCall(async (data, context) => {
+export const setAdmin = regionalFunctions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
   }
@@ -36,7 +39,11 @@ export const setAdmin = functions.https.onCall(async (data, context) => {
   return { success: true };
 });
 
-export const importFromGooglePlaces = functions.https.onCall(async (data, context) => {
+interface ImportPlacesData {
+  countryCode?: string;
+}
+
+export const importFromGooglePlaces = regionalFunctions.https.onCall(async (data: ImportPlacesData = {}, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
   }
@@ -49,7 +56,11 @@ export const importFromGooglePlaces = functions.https.onCall(async (data, contex
   }
 
   try {
-    const result = await importPlacesFromGoogle(data.countryCode);
+    console.log('Starting import with data:', data);
+    console.log('Using Google Maps API key:', process.env.GOOGLE_MAPS_API_KEY ? 'Set' : 'Not set');
+    
+    const result = await importPlacesFromGoogle(data.countryCode || 'NG');
+    console.log('Import completed successfully:', result);
     return result;
   } catch (error: unknown) {
     console.error('Import failed:', error);
