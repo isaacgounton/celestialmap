@@ -14,57 +14,70 @@ CelestialMap is a React application for locating Celestial Church parishes world
 
 ### React Components
 - One component per file
-- Components are organized in `src/components/` by feature
+- Components organized in feature-based directories under `src/components/`
 - Use functional components with hooks
-- Map-related components live in `src/components/map/`
-- Implement protected routes for authenticated features
+- Map components in `src/components/map/`
+- Auth components in `src/components/auth/`
+- Protected routes for authenticated features
 
-### Navigation
-- Use React Router for routing
-- Define routes in `App.tsx`
-- Use TypeScript route params defined in `NavigationParamList.ts`
-- Implement protected routes for authenticated pages
+### Navigation & Routing
+- React Router for routing
+- Routes defined in [App.tsx](src/App.tsx)
+- Navigation components in `src/components/layout/`
+- [`ProtectedRoute`](src/components/auth/ProtectedRoute.tsx) for authenticated pages
 
 ### State Management & Data
-- Use Firebase Realtime Database for data storage
-- Manage authentication state through Firebase Auth
-- Define data types in `src/types/`
-- Parish data structure follows `Parish` interface
+- Firebase Realtime Database for data storage
+- Auth state managed through AuthContext
+- Location state managed through LocationContext
+- Custom hooks for data access (`useAuth`, `useAdmin`, `useParishes`)
 
 ### Firebase Integration
 - Firebase config in `src/lib/firebase.ts`
-- Environment variables for Firebase credentials
-- Parish data operations through Firebase Realtime Database
-- Authentication through Firebase Auth
+- Cloud Functions for admin operations
+- Cloud Functions for data import/sync
+- Firebase Auth for authentication
+- Database rules in [database.rules.json](database.rules.json)
+
+### Cloud Functions
+- Admin management functions
+- Parish data import functions
+- Google Maps sync functions
+- Spreadsheet import support
+- Functions organized by feature in `functions/src/`
 
 ### Styling
 - Tailwind CSS for styling
 - Mobile-first responsive design
-- Custom styles in `src/app.css` and `src/index.css`
-- Use Headless UI components for enhanced UI elements
+- Custom styles in [index.css](src/index.css)
+- Headless UI components for enhanced UI
 
-### Environment Setup
-- Use `.env` for environment variables
-- All Firebase-related variables prefixed with `VITE_FIREBASE_`
-- Example values provided in `.env.example`
-- Development config in `.vscode/`
+### Maps Integration
+- Google Maps via `@react-google-maps/api`
+- Custom map controls
+- Parish location markers
+- Geolocation support
+- Location search and filtering
 
-### Build & Development
+### Environment & Build
 - Vite as build tool
-- TypeScript configuration in `tsconfig.json`
+- Firebase configuration
+- Environment variables with `.env`
 - Development server with `npm run dev`
 - Production build with `npm run build`
 
-### Maps Integration
-- Google Maps integration via `@react-google-maps/api`
-- Map controls in `components/map/MapControls.tsx`
-- Parish location plotting on map
-- Support for parish search and filtering
+### Core Features
+- Parish location mapping
+- User authentication
+- Admin dashboard
+- Parish management
+- Import tools for parish data
+- Automatic sync with Google My Maps
 
 ### Code Organization
 - Components in `src/components/`
-- Configuration in `src/config/`
-- Constants in `src/constants/`
-- Context providers in `src/contexts/`
-- Custom hooks in `src/hooks/`
+- Pages in `src/components/pages/`
+- Hooks in `src/hooks/`
+- Services in `src/services/`
+- Utils in `src/utils/`
 - Firebase setup in `src/lib/`

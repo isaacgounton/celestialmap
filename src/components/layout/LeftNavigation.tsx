@@ -12,6 +12,7 @@ const navigationItems = [
   { icon: <FiShoppingCart size={20} />, label: 'Grocery', path: '/grocery' },
   { icon: <GiGasStove size={20} />, label: 'Gas', path: '/gas' },
   { icon: <FiTool size={20} />, label: 'Services', path: '/services' },
+  { icon: <FiShoppingBag size={20} />, label: 'Marketplace', path: '/marketplace' }, // Changed from FiTool to FiShoppingBag
 ];
 
 interface LeftNavigationProps {

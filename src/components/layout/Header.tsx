@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useLocation as useRouterLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom'; // Removed useLocation import
 import { FiMenu, FiX, FiUser, FiChevronDown, FiSidebar } from 'react-icons/fi';
 import { useAuth } from '../../hooks/useAuth';  // Updated import path
 import { countries } from '../../data/countries';
@@ -17,13 +17,7 @@ export function Header({ isCollapsed, onToggleCollapse }: HeaderProps) {
   const { selectedCountry, setSelectedCountry } = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const location = useRouterLocation();
-
-  const navLinks = [
-    { path: '/marketplace', label: 'Marketplace' },
-  ];
-
-  const isActivePath = (path: string) => location.pathname === path;
+  // Removed unused location variable
 
   return (
     <header className="bg-white border-b border-gray-200 h-16">
@@ -54,22 +48,8 @@ export function Header({ isCollapsed, onToggleCollapse }: HeaderProps) {
             </select>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`text-sm font-medium transition-colors ${
-                  isActivePath(link.path)
-                    ? 'text-primary'
-                    : 'text-gray-600 hover:text-primary'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-
+          {/* Desktop Navigation - Now only contains profile section */}
+          <div className="hidden md:flex items-center">
             {/* User Profile Section */}
             {isAuthenticated ? (
               <div className="relative">
