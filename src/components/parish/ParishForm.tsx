@@ -1,14 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Parish } from '../../types/Parish';
 import { Button } from '../ui/Button';
 
 interface ParishFormProps {
-  onSubmit: (data: Omit<Parish, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  onCancel: () => void;
+  parish?: Parish;  // Optional parish for edit mode
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: Partial<Parish>) => Promise<void>;
 }
 
-export function ParishForm({ onSubmit, onCancel }: ParishFormProps) {
-  const [formData, setFormData] = useState({
+interface ParishFormData {
+  name: string;
+  address: {
+    street: string;
+    city: string;
+    province: string;
+    country: string;
+    postalCode: string;
+  };
+  latitude: number;
+  longitude: number;
+  leaderName: string;
+  phone: string;
+  email: string;
+  website: string;
+  openingHours: Record<string, string>;
+  photos: string[];
+}
+
+export function ParishForm({ parish, isOpen, onClose, onSubmit }: ParishFormProps) {
+  const [formData, setFormData] = useState<ParishFormData>({
     name: '',
     address: {
       street: '',
@@ -32,20 +53,67 @@ export function ParishForm({ onSubmit, onCancel }: ParishFormProps) {
       Saturday: '8:00 AM - 5:00 PM',
       Sunday: '6:00 AM - 8:00 PM'
     },
-    photos: ['']
+    photos: []
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(formData);
+  // Load parish data when editing
+  useEffect(() => {
+    if (parish) {
+      setFormData({
+        name: parish.name || '',
+        address: {
+          street: parish.address?.street || '',
+          city: parish.address?.city || '',
+          province: parish.address?.province || '',
+          country: parish.address?.country || '',
+          postalCode: parish.address?.postalCode || '',
+        },
+        latitude: parish.latitude || 0,
+        longitude: parish.longitude || 0,
+        leaderName: parish.leaderName || '',
+        phone: parish.phone || '',
+        email: parish.email || '',
+        website: parish.website || '',
+        openingHours: parish.openingHours || {
+          Monday: '8:00 AM - 5:00 PM',
+          Tuesday: '8:00 AM - 5:00 PM',
+          Wednesday: '8:00 AM - 5:00 PM',
+          Thursday: '8:00 AM - 5:00 PM',
+          Friday: '8:00 AM - 5:00 PM',
+          Saturday: '8:00 AM - 5:00 PM',
+          Sunday: '6:00 AM - 8:00 PM'
+        },
+        photos: parish.photos || []
+      });
+    }
+  }, [parish]);
+
+  const handleAddressChange = (field: keyof typeof formData.address, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      address: {
+        ...prev.address,
+        [field]: value
+      }
+    }));
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await onSubmit(formData);
+    onClose();
+  };
+
+  if (!isOpen) return null;
 
   const generateId = (fieldName: string) => `parish-${fieldName.toLowerCase().replace(/\s+/g, '-')}`;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-4">Add New Parish</h2>
+        <h2 className="text-2xl font-bold mb-4">
+          {parish ? 'Edit Parish' : 'Add New Parish'}
+        </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -69,10 +137,7 @@ export function ParishForm({ onSubmit, onCancel }: ParishFormProps) {
                 id={generateId('street')}
                 type="text"
                 value={formData.address.street}
-                onChange={e => setFormData({
-                  ...formData,
-                  address: {...formData.address, street: e.target.value}
-                })}
+                onChange={e => handleAddressChange('street', e.target.value)}
                 className="w-full border rounded p-2"
                 required
                 aria-label="Street address"
@@ -85,10 +150,7 @@ export function ParishForm({ onSubmit, onCancel }: ParishFormProps) {
                 id={generateId('city')}
                 type="text"
                 value={formData.address.city}
-                onChange={e => setFormData({
-                  ...formData,
-                  address: {...formData.address, city: e.target.value}
-                })}
+                onChange={e => handleAddressChange('city', e.target.value)}
                 className="w-full border rounded p-2"
                 required
                 aria-label="City"
@@ -101,10 +163,7 @@ export function ParishForm({ onSubmit, onCancel }: ParishFormProps) {
                 id={generateId('province')}
                 type="text"
                 value={formData.address.province}
-                onChange={e => setFormData({
-                  ...formData,
-                  address: {...formData.address, province: e.target.value}
-                })}
+                onChange={e => handleAddressChange('province', e.target.value)}
                 className="w-full border rounded p-2"
                 required
                 aria-label="Province or state"
@@ -117,10 +176,7 @@ export function ParishForm({ onSubmit, onCancel }: ParishFormProps) {
                 id={generateId('country')}
                 type="text"
                 value={formData.address.country}
-                onChange={e => setFormData({
-                  ...formData,
-                  address: {...formData.address, country: e.target.value}
-                })}
+                onChange={e => handleAddressChange('country', e.target.value)}
                 className="w-full border rounded p-2"
                 required
                 aria-label="Country"
@@ -133,10 +189,7 @@ export function ParishForm({ onSubmit, onCancel }: ParishFormProps) {
                 id={generateId('postal')}
                 type="text"
                 value={formData.address.postalCode}
-                onChange={e => setFormData({
-                  ...formData,
-                  address: {...formData.address, postalCode: e.target.value}
-                })}
+                onChange={e => handleAddressChange('postalCode', e.target.value)}
                 className="w-full border rounded p-2"
                 required
                 aria-label="Postal code"
@@ -235,11 +288,11 @@ export function ParishForm({ onSubmit, onCancel }: ParishFormProps) {
           </div>
 
           <div className="flex justify-end space-x-2 mt-6">
-            <Button variant="outline" type="button" onClick={onCancel}>
+            <Button variant="outline" type="button" onClick={onClose}>
               Cancel
             </Button>
             <Button type="submit">
-              Create Parish
+              {parish ? 'Update Parish' : 'Create Parish'}
             </Button>
           </div>
         </form>

@@ -1,7 +1,7 @@
 import { 
   Client, 
-  PlaceType1 as PlaceType, 
-  Language, 
+  PlaceType1 as PlaceType,
+  Language,
   Place,
   AddressGeometry,
   PlacePhoto 
@@ -18,6 +18,78 @@ interface GooglePlace extends Omit<Place, 'geometry' | 'photos'> {
   photos?: Array<PlacePhoto>;
 }
 
+const supportedLanguages: { [key: string]: Language } = {
+  'FR': Language.fr, // French
+  'ES': Language.es, // Spanish
+  'PT': Language.pt, // Portuguese
+  'DE': Language.de, // German
+  'IT': Language.it, // Italian
+  'NL': Language.nl, // Dutch
+  'NG': Language.en, // Nigeria (English)
+  'GB': Language.en, // UK
+  'US': Language.en, // USA
+  'BJ': Language.fr, // Benin (French)
+  'CI': Language.fr, // Côte d'Ivoire (French)
+  'GH': Language.en, // Ghana
+  'TG': Language.fr  // Togo (French)
+};
+
+// Update search terms to be more specific
+const searchTermsBase = [
+  // English - specific to CCC
+  "\"Celestial Church of Christ\"",
+  "\"Celestial Church Parish\"",
+  // French - specific to CCC
+  "\"Eglise du Christianisme Celeste\"",
+  "\"ECC Paroisse\"",  // Specific parish designation
+  "\"Christianisme Celeste\"",
+  "\"Centre Communautaire Chrétien Céleste\"",
+  "\"Église du Christianisme Céleste\"",
+  "\"Eglise Christianiste Celeste\"",
+];
+
+// Validation terms to confirm it's a Celestial Church
+const validationTerms = [
+  'celestial church',
+  'christianisme celeste',
+  'eglise celeste',
+  'paroisse celeste',
+  'celestial parish',
+];
+
+// Update country-specific terms to be more precise
+const COUNTRY_SPECIFIC_TERMS: { [key: string]: string[] } = {
+  'BJ': [
+    "\"Eglise du Christianisme Celeste Benin\"",
+    "\"ECC Benin\"",
+    "\"Christianisme Celeste Porto-Novo\"",
+    "\"Eglise ECC\"",
+  ],
+  'NG': [
+    "\"Celestial Church of Christ Nigeria\"",
+    "\"Celestial Church Nigeria\"",
+  ],
+  'GB': [
+    "\"Celestial Church of Christ London\"",
+    "\"Celestial Church UK\"",
+  ],
+  'FR': [
+    "\"Eglise du Christianisme Celeste Paris\"",
+    "\"Eglise Christianisme Celeste France\"",
+  ],
+  // Add more country-specific terms as needed
+};
+
+function isCelestialParish(place: GooglePlace): boolean {
+  const nameLower = place.name.toLowerCase();
+  const addressLower = place.formatted_address.toLowerCase();
+  
+  // Check if any validation term is present in the name or address
+  return validationTerms.some(term => 
+    nameLower.includes(term) || addressLower.includes(term)
+  );
+}
+
 export async function importPlacesFromGoogle(countryCode: string = 'NG') {
   const client = new Client({});
   let importCount = 0;
@@ -31,95 +103,110 @@ export async function importPlacesFromGoogle(countryCode: string = 'NG') {
       throw new Error('Google Maps API key not configured');
     }
 
+    const language = supportedLanguages[countryCode] || Language.en; // Default to English
     const countryName = getCountryName(countryCode);
-    // Use multiple search terms to find more parishes
-    const searchTerms = [
-      `"Celestial Church of Christ" in ${countryName}`,
-      `"CCC Parish" in ${countryName}`,
-      `"Celestial Parish" in ${countryName}`,
-      `"Eglise du Christianisme Celeste" in ${countryName}`, // French name
-    ];
 
-    let places: GooglePlace[] = [];
+    const countrySpecificTerms = COUNTRY_SPECIFIC_TERMS[countryCode] || [];
+    const searchTerms = [...searchTermsBase, ...countrySpecificTerms]
+      .map(term => `"${term}" in ${countryName}`);
+
+    let allPlaces: GooglePlace[] = [];
     for (const query of searchTerms) {
-      console.log(`Searching with query: ${query}`);
-      const response = await client.textSearch({
-        params: {
-          query,
-          key: process.env.GOOGLE_MAPS_API_KEY || '',
-          type: PlaceType.church,
-          language: Language.en,
-          region: countryCode.toLowerCase()
+      console.log(`Searching with query: ${query}, language: ${language}`);
+      try {
+        const response = await client.textSearch({
+          params: {
+            query,
+            key: apiKey,
+            type: PlaceType.church,
+            language, // Now correctly typed as 'en' | 'fr'
+            region: countryCode.toLowerCase()
+          }
+        });
+
+        if (response.data.results) {
+          allPlaces.push(...response.data.results as GooglePlace[]);
+        } else {
+          console.warn(`No results found for query: ${query}`);
         }
-      });
-      places = [...places, ...response.data.results as GooglePlace[]];
+      } catch (error) {
+        console.error(`Error searching for query: ${query}`, error);
+      }
     }
 
     // Remove duplicates based on place_id
-    const uniquePlaces = Array.from(new Map(places.map(place => [place.place_id, place])).values());
-
-    const validPlaces = uniquePlaces.filter(
-      place => place.name?.toLowerCase().includes('celestial church')
+    const uniquePlaces = allPlaces.filter((place, index, self) =>
+      index === self.findIndex((p) => p.place_id === place.place_id)
     );
 
-    for (const place of validPlaces) {
-      if (!place.place_id || !place.name || !place.formatted_address || !place.geometry?.location) {
-        console.log('Skipping invalid place:', place);
-        continue;
-      }
-
-      if (!isPlaceInCountry(place.formatted_address || '', countryCode)) {
-        console.log(`Skipping place not in ${countryCode}:`, place.formatted_address);
-        continue;
-      }
-
-      const details = await client.placeDetails({
-        params: {
-          place_id: place.place_id,
-          key: apiKey,
-          fields: ['formatted_phone_number', 'website', 'opening_hours']
+    for (const place of uniquePlaces) {
+      try {
+        // Add validation to ensure it's a Celestial Church parish
+        if (!isCelestialParish(place)) {
+          console.log(`Skipping non-Celestial Church: ${place.name}`);
+          continue;
         }
-      });
 
-      const addressParts = place.formatted_address.split(',').map((part: string) => part.trim());
-      const parish: Omit<Parish, 'id'> = {
-        name: place.name,
-        address: {
-          street: addressParts[0] || '',
-          city: addressParts[1] || '',
-          province: addressParts[2] || '',
-          country: countryCode,
-          postalCode: ''
-        },
-        latitude: place.geometry.location.lat,
-        longitude: place.geometry.location.lng,
-        phone: details.data.result.formatted_phone_number || '',
-        email: '',
-        website: details.data.result.website || '',
-        leaderName: '',
-        description: place.formatted_address,
-        photos: place.photos?.map((p: { photo_reference: string }) => 
-          `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${p.photo_reference}&key=${apiKey}`
-        ) || [],
-        openingHours: details.data.result.opening_hours?.weekday_text?.reduce((acc, curr) => {
-          const [day, hours] = curr.split(': ');
-          return { ...acc, [day.toLowerCase()]: hours };
-        }, {} as Record<string, string>) || {},
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        importSource: 'google_places' as const,
-        sourceId: place.place_id
-      };
+        // Add country validation
+        if (!isPlaceInCountry(place.formatted_address, countryCode)) {
+          console.log(`Skipping ${place.name} - not in ${countryName}`);
+          continue;
+        }
 
-      // Check if parish already exists by sourceId
-      const existingParish = (await parishesRef
-        .orderByChild('sourceId')
-        .equalTo(place.place_id)
-        .once('value')).val();
+        const details = await client.placeDetails({
+          params: {
+            place_id: place.place_id,
+            key: apiKey,
+            fields: ['formatted_phone_number', 'website', 'opening_hours', 'international_phone_number', 'photos']
+          }
+        });
 
-      if (!existingParish) {
-        await parishesRef.push(parish);
-        importCount++;
+        const addressParts = place.formatted_address.split(',').map(part => part.trim());
+        const parishData: Omit<Parish, 'id'> = {
+          name: place.name,
+          address: {
+            street: addressParts[0] || '',
+            city: addressParts[1] || '',
+            province: addressParts[2] || '',
+            country: countryCode,
+            postalCode: '' // Extract postal code if needed
+          },
+          latitude: place.geometry.location.lat,
+          longitude: place.geometry.location.lng,
+          phone: details.data.result.international_phone_number || details.data.result.formatted_phone_number || '',
+          email: '', // Extract email if available
+          website: details.data.result.website || '',
+          leaderName: '', // Extract leader name if available
+          description: place.formatted_address,
+          photos: details.data.result.photos?.map(photo => 
+            `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photo.photo_reference}&key=${apiKey}`
+          ) || [],
+          openingHours: details.data.result.opening_hours?.weekday_text?.reduce((acc, curr) => {
+            const [day, hours] = curr.split(': ');
+            return { ...acc, [day.toLowerCase()]: hours };
+          }, {} as Record<string, string>) || {},
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          importSource: 'google_places',
+          sourceId: place.place_id
+        };
+
+        // Check if parish already exists by sourceId
+        const existingParishSnapshot = await parishesRef.orderByChild('sourceId').equalTo(place.place_id).once('value');
+        const existingParish = existingParishSnapshot.val();
+
+        if (!existingParish) {
+          await parishesRef.push(parishData);
+          importCount++;
+          console.log(`Imported new parish: ${place.name}`);
+        } else {
+          // Update existing parish if needed
+          const existingParishId = Object.keys(existingParish)[0];
+          await parishesRef.child(existingParishId).update(parishData);
+          console.log(`Updated parish: ${place.name}`);
+        }
+      } catch (error) {
+        console.error(`Error processing place: ${place.name}`, error);
       }
     }
 
@@ -130,83 +217,50 @@ export async function importPlacesFromGoogle(countryCode: string = 'NG') {
   }
 }
 
+function isPlaceInCountry(address: string, countryCode: string): boolean {
+  const countryName = getCountryName(countryCode);
+  // Add multiple checks for country validation
+  return (
+    address.toLowerCase().includes(countryName.toLowerCase()) ||
+    address.toLowerCase().includes(countryCode.toLowerCase()) ||
+    // Handle special cases like UK/United Kingdom
+    (countryCode === 'GB' && address.toLowerCase().includes('united kingdom')) ||
+    (countryCode === 'UK' && address.toLowerCase().includes('united kingdom'))
+  );
+}
+
 function getCountryName(countryCode: string): string {
     const countries: Record<string, string> = {
-      'AF': 'Afghanistan',
-      'AX': 'Åland Islands',
-      'AL': 'Albania',
-      'DZ': 'Algeria',
-      'AS': 'American Samoa',
-      'AD': 'Andorra',
       'AO': 'Angola',
-      'AI': 'Anguilla',
-      'AQ': 'Antarctica',
-      'AG': 'Antigua and Barbuda',
       'AR': 'Argentina',
-      'AM': 'Armenia',
-      'AW': 'Aruba',
       'AU': 'Australia',
       'AT': 'Austria',
-      'AZ': 'Azerbaijan',
-      'BS': 'Bahamas',
-      'BH': 'Bahrain',
-      'BD': 'Bangladesh',
-      'BB': 'Barbados',
-      'BY': 'Belarus',
       'BE': 'Belgium',
       'BZ': 'Belize',
       'BJ': 'Benin',
-      'BM': 'Bermuda',
-      'BT': 'Bhutan',
-      'BO': 'Bolivia',
-      'BQ': 'Bonaire, Sint Eustatius and Saba',
-      'BA': 'Bosnia and Herzegovina',
       'BW': 'Botswana',
-      'BV': 'Bouvet Island',
       'BR': 'Brazil',
-      'IO': 'British Indian Ocean Territory',
-      'BN': 'Brunei Darussalam',
-      'BG': 'Bulgaria',
       'BF': 'Burkina Faso',
       'BI': 'Burundi',
-      'CV': 'Cabo Verde',
-      'KH': 'Cambodia',
       'CM': 'Cameroon',
       'CA': 'Canada',
-      'KY': 'Cayman Islands',
       'CF': 'Central African Republic',
       'TD': 'Chad',
       'CL': 'Chile',
-      'CN': 'China',
       'CX': 'Christmas Island',
-      'CC': 'Cocos (Keeling) Islands',
-      'CO': 'Colombia',
       'KM': 'Comoros',
       'CG': 'Congo',
       'CD': 'Congo, Democratic Republic of the',
-      'CK': 'Cook Islands',
-      'CR': 'Costa Rica',
       'CI': 'Côte d\'Ivoire',
-      'HR': 'Croatia',
       'CU': 'Cuba',
-      'CW': 'Curaçao',
-      'CY': 'Cyprus',
-      'CZ': 'Czech Republic',
       'DK': 'Denmark',
       'DJ': 'Djibouti',
       'DM': 'Dominica',
       'DO': 'Dominican Republic',
       'EC': 'Ecuador',
-      'EG': 'Egypt',
-      'SV': 'El Salvador',
       'GQ': 'Equatorial Guinea',
       'ER': 'Eritrea',
-      'EE': 'Estonia',
-      'SZ': 'Eswatini',
       'ET': 'Ethiopia',
-      'FK': 'Falkland Islands (Malvinas)',
-      'FO': 'Faroe Islands',
-      'FJ': 'Fiji',
       'FI': 'Finland',
       'FR': 'France',
       'GF': 'French Guiana',
@@ -214,52 +268,27 @@ function getCountryName(countryCode: string): string {
       'TF': 'French Southern Territories',
       'GA': 'Gabon',
       'GM': 'Gambia',
-      'GE': 'Georgia',
       'DE': 'Germany',
       'GH': 'Ghana',
-      'GI': 'Gibraltar',
       'GR': 'Greece',
       'GL': 'Greenland',
       'GD': 'Grenada',
       'GP': 'Guadeloupe',
-      'GU': 'Guam',
-      'GT': 'Guatemala',
-      'GG': 'Guernsey',
       'GN': 'Guinea',
       'GW': 'Guinea-Bissau',
       'GY': 'Guyana',
       'HT': 'Haiti',
-      'HM': 'Heard Island and McDonald Islands',
       'VA': 'Holy See',
-      'HN': 'Honduras',
       'HK': 'Hong Kong',
-      'HU': 'Hungary',
-      'IS': 'Iceland',
-      'IN': 'India',
-      'ID': 'Indonesia',
-      'IR': 'Iran',
-      'IQ': 'Iraq',
       'IE': 'Ireland',
-      'IM': 'Isle of Man',
       'IL': 'Israel',
       'IT': 'Italy',
       'JM': 'Jamaica',
-      'JP': 'Japan',
       'JE': 'Jersey',
       'JO': 'Jordan',
-      'KZ': 'Kazakhstan',
       'KE': 'Kenya',
-      'KI': 'Kiribati',
-      'KP': 'North Korea',
-      'KR': 'South Korea',
-      'KW': 'Kuwait',
-      'KG': 'Kyrgyzstan',
-      'LA': 'Lao People\'s Democratic Republic',
-      'LV': 'Latvia',
-      'LB': 'Lebanon',
       'LS': 'Lesotho',
       'LR': 'Liberia',
-      'LY': 'Libya',
       'LI': 'Liechtenstein',
       'LT': 'Lithuania',
       'LU': 'Luxembourg',
@@ -276,12 +305,9 @@ function getCountryName(countryCode: string): string {
       'MU': 'Mauritius',
       'YT': 'Mayotte',
       'MX': 'Mexico',
-      'FM': 'Micronesia',
-      'MD': 'Moldova',
       'MC': 'Monaco',
       'MN': 'Mongolia',
       'ME': 'Montenegro',
-      'MS': 'Montserrat',
       'MA': 'Morocco',
       'MZ': 'Mozambique',
       'MM': 'Myanmar',
@@ -291,101 +317,46 @@ function getCountryName(countryCode: string): string {
       'NL': 'Netherlands',
       'NC': 'New Caledonia',
       'NZ': 'New Zealand',
-      'NI': 'Nicaragua',
       'NE': 'Niger',
       'NG': 'Nigeria',
-      'NU': 'Niue',
       'NF': 'Norfolk Island',
       'MK': 'North Macedonia',
-      'MP': 'Northern Mariana Islands',
       'NO': 'Norway',
-      'OM': 'Oman',
-      'PK': 'Pakistan',
-      'PW': 'Palau',
-      'PS': 'Palestine, State of',
-      'PA': 'Panama',
-      'PG': 'Papua New Guinea',
-      'PY': 'Paraguay',
-      'PE': 'Peru',
-      'PH': 'Philippines',
-      'PN': 'Pitcairn',
-      'PL': 'Poland',
       'PT': 'Portugal',
       'PR': 'Puerto Rico',
-      'QA': 'Qatar',
       'RE': 'Réunion',
       'RO': 'Romania',
       'RU': 'Russian Federation',
       'RW': 'Rwanda',
-      'BL': 'Saint Barthélemy',
-      'SH': 'Saint Helena, Ascension and Tristan da Cunha',
-      'KN': 'Saint Kitts and Nevis',
-      'LC': 'Saint Lucia',
-      'MF': 'Saint Martin (French part)',
-      'PM': 'Saint Pierre and Miquelon',
-      'VC': 'Saint Vincent and the Grenadines',
       'WS': 'Samoa',
       'SM': 'San Marino',
       'ST': 'Sao Tome and Principe',
-      'SA': 'Saudi Arabia',
       'SN': 'Senegal',
       'RS': 'Serbia',
       'SC': 'Seychelles',
       'SL': 'Sierra Leone',
       'SG': 'Singapore',
-      'SX': 'Sint Maarten (Dutch part)',
-      'SK': 'Slovakia',
-      'SI': 'Slovenia',
       'SB': 'Solomon Islands',
-      'SO': 'Somalia',
       'ZA': 'South Africa',
-      'GS': 'South Georgia and the South Sandwich Islands',
-      'SS': 'South Sudan',
       'ES': 'Spain',
-      'LK': 'Sri Lanka',
-      'SD': 'Sudan',
-      'SR': 'Suriname',
-      'SJ': 'Svalbard and Jan Mayen',
       'SE': 'Sweden',
       'CH': 'Switzerland',
-      'SY': 'Syrian Arab Republic',
-      'TW': 'Taiwan',
-      'TJ': 'Tajikistan',
       'TZ': 'Tanzania, United Republic of',
-      'TH': 'Thailand',
       'TL': 'Timor-Leste',
       'TG': 'Togo',
-      'TK': 'Tokelau',
-      'TO': 'Tonga',
       'TT': 'Trinidad and Tobago',
-      'TN': 'Tunisia',
-      'TR': 'Turkey',
-      'TM': 'Turkmenistan',
-      'TC': 'Turks and Caicos Islands',
-      'TV': 'Tuvalu',
       'UG': 'Uganda',
-      'UA': 'Ukraine',
-      'AE': 'United Arab Emirates',
       'GB': 'United Kingdom',
       'US': 'United States of America',
       'UM': 'United States Minor Outlying Islands',
       'UY': 'Uruguay',
-      'UZ': 'Uzbekistan',
       'VU': 'Vanuatu',
       'VE': 'Venezuela (Bolivarian Republic of)',
-      'VN': 'Viet Nam',
       'VG': 'Virgin Islands (British)',
       'VI': 'Virgin Islands (U.S.)',
       'WF': 'Wallis and Futuna',
-      'EH': 'Western Sahara',
-      'YE': 'Yemen',
       'ZM': 'Zambia',
       'ZW': 'Zimbabwe',
     };
   return countries[countryCode] || countryCode;
-}
-
-function isPlaceInCountry(address: string, countryCode: string): boolean {
-  const countryName = getCountryName(countryCode);
-  return address.toLowerCase().includes(countryName.toLowerCase());
 }

@@ -1,16 +1,16 @@
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
+import { verifyAdmin } from './utils/adminUtils';
+import { fetchMapFeatures, convertToParish } from './syncGoogleMaps';
 import { importPlacesFromGoogle } from './importPlaces';
 import { importFromSpreadsheet } from './importSpreadsheet';
-import { fetchMapFeatures, convertToParish } from './syncGoogleMaps';
-import { verifyAdmin } from './utils/adminUtils';
 
-// Initialize Firebase Admin
+// Initialize Firebase Admin once
 if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-// Export all functions
+// Export functions with explicit error handling
 export * from './admin/adminFunctions';
 export * from './parishes/parishFunctions';
 export * from './sync/syncFunctions';

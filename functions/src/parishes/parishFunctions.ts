@@ -1,26 +1,54 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 
-export const addPersonalPlace = functions.region('us-central1').https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
-  }
+export const addPersonalPlace = functions
+  .region('us-central1')
+  .runWith({
+    timeoutSeconds: 300,
+    memory: '256MB'
+  })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'Must be authenticated'
+      );
+    }
 
-  const { place } = data;
-  if (!place) {
-    throw new functions.https.HttpsError('invalid-argument', 'Place data is required');
-  }
+    const { place } = data;
+    if (!place || !place.name || !place.address) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Place must include name and address'
+      );
+    }
 
-  const personalPlacesRef = admin.database().ref(`users/${context.auth.uid}/places`);
-  const newPlaceRef = personalPlacesRef.push();
-  await newPlaceRef.set({
-    ...place,
-    createdAt: admin.database.ServerValue.TIMESTAMP,
-    createdBy: context.auth.uid
+    try {
+      const personalPlacesRef = admin.database()
+        .ref(`users/${context.auth.uid}/places`);
+      
+      const newPlaceRef = personalPlacesRef.push();
+      await newPlaceRef.set({
+        ...place,
+        createdAt: admin.database.ServerValue.TIMESTAMP,
+        createdBy: context.auth.uid,
+        status: 'pending'
+      });
+
+      return { 
+        success: true, 
+        id: newPlaceRef.key,
+        message: 'Place added successfully'
+      };
+    } catch (error) {
+      console.error('Error adding personal place:', error);
+      throw new functions.https.HttpsError(
+        'internal',
+        'Failed to add place',
+        error instanceof Error ? error.message : 'Unknown error'
+      );
+    }
   });
-
-  return { id: newPlaceRef.key };
-});
 
 export const onParishUpdate = functions.region('us-central1')
   .database.ref('/parishes/{parishId}')
