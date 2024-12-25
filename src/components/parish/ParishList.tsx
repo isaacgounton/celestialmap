@@ -7,6 +7,7 @@ import { useAdmin } from '../../hooks/useAdmin';
 import { db } from '../../lib/firebase';
 import { ref, remove, update } from 'firebase/database';
 import toast from 'react-hot-toast';
+import { ParishCount } from './ParishCount';
 
 interface ParishListProps {
   parishes: Parish[];
@@ -67,9 +68,7 @@ export function ParishList({ parishes, onParishSelect, loading = false }: Parish
   if (filteredParishes.length === 0) {
     return (
       <div className="p-4">
-        <p className="text-center text-gray-500">
-          No parishes found in {selectedCountry}
-        </p>
+        <ParishCount count={0} countryName={selectedCountry} className="text-center" />
       </div>
     );
   }
@@ -77,17 +76,24 @@ export function ParishList({ parishes, onParishSelect, loading = false }: Parish
   return (
     <>
       <div className="overflow-auto">
-        <div className="p-4 space-y-4">
-          {filteredParishes.map((parish) => (
-            <ParishListItem
-              key={parish.id}
-              parish={parish}
-              onClick={() => onParishSelect(parish)}
-              isAdmin={isAdmin}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          ))}
+        <div className="p-4">
+          <ParishCount 
+            count={filteredParishes.length} 
+            countryName={selectedCountry} 
+            className="mb-4" 
+          />
+          <div className="space-y-4">
+            {filteredParishes.map((parish) => (
+              <ParishListItem
+                key={parish.id}
+                parish={parish}
+                onClick={() => onParishSelect(parish)}
+                isAdmin={isAdmin}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
         </div>
       </div>
 

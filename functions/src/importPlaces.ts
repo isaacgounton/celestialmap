@@ -18,108 +18,142 @@ interface GooglePlace extends Omit<Place, 'geometry' | 'photos'> {
   photos?: Array<PlacePhoto>;
 }
 
-const supportedLanguages: { [key: string]: Language } = {
-  'FR': Language.fr, // French
-  'ES': Language.es, // Spanish
-  'PT': Language.pt, // Portuguese
-  'DE': Language.de, // German
-  'IT': Language.it, // Italian
-  'NL': Language.nl, // Dutch
-  'NG': Language.en, // Nigeria (English)
-  'GB': Language.en, // UK
-  'US': Language.en, // USA
-  'BJ': Language.fr, // Benin (French)
-  'CI': Language.fr, // Côte d'Ivoire (French)
-  'GH': Language.en, // Ghana
-  'TG': Language.fr  // Togo (French)
-};
+interface CountryConfig {
+  name: string;
+  language: Language;
+  searchTerms: string[];
+  validationTerms: string[]; // Now required, not optional
+}
 
-// Update search terms to be more specific
-const searchTermsBase = [
-  // English - specific to CCC
-  "\"Celestial Church of Christ\"",
-  "\"Celestial Church Parish\"",
-  // French - specific to CCC
-  "\"Eglise du Christianisme Celeste\"",
-  "\"ECC Paroisse\"",  // Specific parish designation
-  "\"Christianisme Celeste\"",
-  "\"Centre Communautaire Chrétien Céleste\"",
-  "\"Église du Christianisme Céleste\"",
-  "\"Eglise Christianiste Celeste\"",
+// Base search terms for any country
+const baseSearchTerms = [
+  'Celestial Church of Christ',
+  'CCC Parish',
+  'Eglise du Christianisme Celeste',
+  'ECC Paroisse',
 ];
 
-// Validation terms to confirm it's a Celestial Church
-const validationTerms = [
+// Default validation terms
+const defaultValidationTerms = [
   'celestial church',
   'christianisme celeste',
-  'eglise celeste',
-  'paroisse celeste',
-  'celestial parish',
+  'ccc',
+  'ecc',
 ];
 
-// Update country-specific terms to be more precise
-const COUNTRY_SPECIFIC_TERMS: { [key: string]: string[] } = {
-  'BJ': [
-    "\"Eglise du Christianisme Celeste Benin\"",
-    "\"ECC Benin\"",
-    "\"Christianisme Celeste Porto-Novo\"",
-    "\"Eglise ECC\"",
-  ],
-  'NG': [
-    "\"Celestial Church of Christ Nigeria\"",
-    "\"Celestial Church Nigeria\"",
-  ],
-  'GB': [
-    "\"Celestial Church of Christ London\"",
-    "\"Celestial Church UK\"",
-  ],
-  'FR': [
-    "\"Eglise du Christianisme Celeste Paris\"",
-    "\"Eglise Christianisme Celeste France\"",
-  ],
-  // Add more country-specific terms as needed
+const countryConfigs: Record<string, Partial<CountryConfig>> = {
+  'BJ': {
+    name: 'Benin',
+    language: Language.fr,
+    searchTerms: [
+      'Eglise du Christianisme Celeste Benin',
+      'ECC Paroisse Benin',
+      'Christianisme Celeste Porto-Novo',
+    ],
+    validationTerms: [
+      'christianisme celeste',
+      'ecc paroisse',
+      'eglise celeste'
+    ]
+  },
+  'FR': {
+    name: 'France',
+    language: Language.fr,
+    searchTerms: [
+      'Eglise du Christianisme Celeste',
+      'Eglise Celeste France',
+      'Christianisme Celeste Paris',
+    ]
+  },
+  'NG': {
+    name: 'Nigeria',
+    language: Language.en,
+    searchTerms: [
+      'Celestial Church of Christ',
+      'Celestial Church Parish Nigeria',
+      'Celestial Parish Lagos',
+    ]
+  },
+  // Add more countries as needed
 };
 
-function isCelestialParish(place: GooglePlace): boolean {
+function getCountryConfig(countryCode: string): CountryConfig {
+  const defaultConfig = {
+    name: getCountryName(countryCode),
+    language: Language.en,
+    searchTerms: baseSearchTerms,
+    validationTerms: defaultValidationTerms
+  };
+
+  const specificConfig = countryConfigs[countryCode];
+  if (!specificConfig) {
+    console.log(`No specific configuration for ${countryCode}, using defaults`);
+    return defaultConfig;
+  }
+
+  return {
+    ...defaultConfig,
+    ...specificConfig,
+    // Merge search terms if exists
+    searchTerms: [
+      ...baseSearchTerms,
+      ...(specificConfig.searchTerms || [])
+    ],
+    // Merge validation terms if exists
+    validationTerms: [
+      ...defaultValidationTerms,
+      ...(specificConfig.validationTerms || [])
+    ]
+  };
+}
+
+function buildSearchQuery(term: string, countryName: string): string {
+  // Exact match with quotes and explicit country name
+  return `"${term}" "${countryName}"`;
+}
+
+function isCelestialParish(place: GooglePlace, config: CountryConfig): boolean {
   const nameLower = place.name.toLowerCase();
   const addressLower = place.formatted_address.toLowerCase();
   
-  // Check if any validation term is present in the name or address
-  return validationTerms.some(term => 
+  return config.validationTerms.some(term => 
     nameLower.includes(term) || addressLower.includes(term)
   );
 }
 
 export async function importPlacesFromGoogle(countryCode: string = 'NG') {
   const client = new Client({});
+  const config = getCountryConfig(countryCode);
+  
+  if (!config) {
+    throw new Error(`Country ${countryCode} not configured`);
+  }
+
   let importCount = 0;
   const parishesRef = admin.database().ref('parishes');
   
   try {
-    const config = functions.config();
-    const apiKey = config.google?.maps_key;
+    const functionsConfig = functions.config();
+    const apiKey = functionsConfig.google?.maps_key;
     
     if (!apiKey) {
       throw new Error('Google Maps API key not configured');
     }
 
-    const language = supportedLanguages[countryCode] || Language.en; // Default to English
-    const countryName = getCountryName(countryCode);
-
-    const countrySpecificTerms = COUNTRY_SPECIFIC_TERMS[countryCode] || [];
-    const searchTerms = [...searchTermsBase, ...countrySpecificTerms]
-      .map(term => `"${term}" in ${countryName}`);
+    const searchQueries = config.searchTerms.map(term => 
+      buildSearchQuery(term, config.name)
+    );
 
     let allPlaces: GooglePlace[] = [];
-    for (const query of searchTerms) {
-      console.log(`Searching with query: ${query}, language: ${language}`);
+    for (const query of searchQueries) {
+      console.log(`Searching with query: ${query}, language: ${config.language}`);
       try {
         const response = await client.textSearch({
           params: {
             query,
             key: apiKey,
             type: PlaceType.church,
-            language, // Now correctly typed as 'en' | 'fr'
+            language: config.language,
             region: countryCode.toLowerCase()
           }
         });
@@ -142,14 +176,13 @@ export async function importPlacesFromGoogle(countryCode: string = 'NG') {
     for (const place of uniquePlaces) {
       try {
         // Add validation to ensure it's a Celestial Church parish
-        if (!isCelestialParish(place)) {
+        if (!isCelestialParish(place, config)) {
           console.log(`Skipping non-Celestial Church: ${place.name}`);
           continue;
         }
 
-        // Add country validation
-        if (!isPlaceInCountry(place.formatted_address, countryCode)) {
-          console.log(`Skipping ${place.name} - not in ${countryName}`);
+        if (!place.formatted_address.toLowerCase().includes(config.name.toLowerCase())) {
+          console.log(`Skipping ${place.name} - not in ${config.name}`);
           continue;
         }
 
@@ -215,18 +248,6 @@ export async function importPlacesFromGoogle(countryCode: string = 'NG') {
     console.error('Import failed:', error);
     throw error;
   }
-}
-
-function isPlaceInCountry(address: string, countryCode: string): boolean {
-  const countryName = getCountryName(countryCode);
-  // Add multiple checks for country validation
-  return (
-    address.toLowerCase().includes(countryName.toLowerCase()) ||
-    address.toLowerCase().includes(countryCode.toLowerCase()) ||
-    // Handle special cases like UK/United Kingdom
-    (countryCode === 'GB' && address.toLowerCase().includes('united kingdom')) ||
-    (countryCode === 'UK' && address.toLowerCase().includes('united kingdom'))
-  );
 }
 
 function getCountryName(countryCode: string): string {
