@@ -34,7 +34,7 @@ const Logo = ({ className, collapsed }: LogoProps) => {
       </svg>
       {!collapsed && (
         <h1 className="text-2xl font-bold text-primary">
-          CelestialMap
+          OurParishes
         </h1>
       )}
     </div>

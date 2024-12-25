@@ -149,6 +149,7 @@ export function Header({ isCollapsed, onToggleCollapse }: HeaderProps) {
                 </Link>
               )}
             </div>
+            {/* Removed contact link */}
           </div>
         </div>
       </div>

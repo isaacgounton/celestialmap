@@ -7,7 +7,7 @@ export function Footer() {
     <footer className="bg-white shadow-md py-4 px-6">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="text-center md:text-left">
-          <h3 className="text-lg font-semibold text-gray-800">CelestialMap</h3>
+          <h3 className="text-lg font-semibold text-gray-800">OurParishes</h3>
           <p className="text-sm text-gray-600">Finding parishes worldwide</p>
         </div>
         
@@ -19,7 +19,7 @@ export function Footer() {
             Marketplace
           </Link>
           <a 
-            href="mailto:support@celestialmap.com"
+            href="mailto:support@ourparishes.com"
             className="text-gray-600 hover:text-primary"
           >
             Contact
@@ -27,7 +27,7 @@ export function Footer() {
         </div>
 
         <div className="text-sm text-gray-500">
-          © {currentYear} CelestialMap. All rights reserved.
+          © {currentYear} OurParishes. All rights reserved.
         </div>
       </div>
     </footer>
