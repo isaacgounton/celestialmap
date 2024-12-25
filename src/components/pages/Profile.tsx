@@ -13,33 +13,7 @@ import { ParishForm } from '../parish/ParishForm';
 import { createParish } from '../../lib/firebase';
 import toast from 'react-hot-toast';
 import type { User } from '../../types/User';
-
-interface ParishFormData {
-  email: string;
-  name: string;
-  leaderName: string;
-  phone: string;
-  address: {
-    street: string;
-    city: string;
-    province: string;
-    country: string;
-    postalCode: string;
-  };
-  latitude: number;
-  longitude: number;
-  description?: string;
-  photos: string[]; // Make photos required with empty array default
-  openingHours: {
-    monday?: string;
-    tuesday?: string;
-    wednesday?: string;
-    thursday?: string;
-    friday?: string;
-    saturday?: string;
-    sunday?: string;
-  };
-}
+import { Parish } from '../../types/Parish';
 
 interface PersonalInformationPanelProps {
   user: User & { displayName: string }; // Add displayName requirement
@@ -65,12 +39,27 @@ export function Profile() {
     return <div>Please log in to view your profile</div>;
   }
 
-  const handleParishSubmit = async (parishData: ParishFormData) => {
+  const handleParishSubmit = async (parishData: Partial<Parish>) => {
     try {
       const toastId = toast.loading('Adding parish...');
       await createParish({
-        ...parishData,
-        photos: parishData.photos || [] // Ensure photos is never undefined
+        name: parishData.name || '',
+        address: parishData.address || {
+          street: '',
+          city: '',
+          province: '',
+          country: '',
+          postalCode: ''
+        },
+        latitude: parishData.latitude || 0,
+        longitude: parishData.longitude || 0,
+        leaderName: parishData.leaderName || '',
+        phone: parishData.phone || '',
+        email: parishData.email || '',
+        website: parishData.website || '',
+        description: parishData.description,
+        photos: parishData.photos || [],
+        openingHours: parishData.openingHours || {}
       });
       toast.success('Parish added successfully!', { id: toastId });
       setShowParishForm(false);
@@ -135,8 +124,9 @@ export function Profile() {
       {/* Parish Form Modal */}
       {showParishForm && (
         <ParishForm
+          isOpen={showParishForm}
+          onClose={() => setShowParishForm(false)}
           onSubmit={handleParishSubmit}
-          onCancel={() => setShowParishForm(false)}
         />
       )}
 

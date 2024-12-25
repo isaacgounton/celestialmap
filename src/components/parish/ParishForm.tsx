@@ -9,27 +9,16 @@ interface ParishFormProps {
   onSubmit: (data: Partial<Parish>) => Promise<void>;
 }
 
-interface ParishFormData {
-  name: string;
-  address: {
-    street: string;
-    city: string;
-    province: string;
-    country: string;
-    postalCode: string;
-  };
-  latitude: number;
-  longitude: number;
-  leaderName: string;
-  phone: string;
-  email: string;
-  website: string;
-  openingHours: Record<string, string>;
-  photos: string[];
+interface ParishAddress {
+  street: string;
+  city: string;
+  province: string;
+  country: string;
+  postalCode: string;
 }
 
 export function ParishForm({ parish, isOpen, onClose, onSubmit }: ParishFormProps) {
-  const [formData, setFormData] = useState<ParishFormData>({
+  const [formData, setFormData] = useState<Partial<Parish> & { address: ParishAddress }>({
     name: '',
     address: {
       street: '',
@@ -60,7 +49,7 @@ export function ParishForm({ parish, isOpen, onClose, onSubmit }: ParishFormProp
   useEffect(() => {
     if (parish) {
       setFormData({
-        name: parish.name || '',
+        ...parish,
         address: {
           street: parish.address?.street || '',
           city: parish.address?.city || '',
@@ -88,11 +77,11 @@ export function ParishForm({ parish, isOpen, onClose, onSubmit }: ParishFormProp
     }
   }, [parish]);
 
-  const handleAddressChange = (field: keyof typeof formData.address, value: string) => {
+  const handleAddressChange = (field: keyof ParishAddress, value: string) => {
     setFormData(prev => ({
       ...prev,
       address: {
-        ...prev.address,
+        ...(prev.address as ParishAddress),
         [field]: value
       }
     }));
@@ -136,7 +125,7 @@ export function ParishForm({ parish, isOpen, onClose, onSubmit }: ParishFormProp
               <input
                 id={generateId('street')}
                 type="text"
-                value={formData.address.street}
+                value={formData.address?.street || ''}
                 onChange={e => handleAddressChange('street', e.target.value)}
                 className="w-full border rounded p-2"
                 required
